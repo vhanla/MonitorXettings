@@ -6,7 +6,8 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus, UCL.Form,
   UCL.CaptionBar, UCL.Classes, UCL.Button, UCL.Slider, UCL.Text, ComObj, ActiveX,
-  UCL.QuickButton, UCL.ThemeManager, ShellApi;
+  UCL.QuickButton, UCL.ThemeManager, ShellApi, settings, System.Actions,
+  Vcl.ActnList, Registry;
 
 type
   PHYSICAL_MONITOR = record
@@ -30,7 +31,7 @@ type
     property OnMouseWheelUp;
   end;
 
-  TForm1 = class(TUForm)
+  TformMain = class(TUForm)
     TrayIcon1: TTrayIcon;
     PopupMenu1: TPopupMenu;
     Exit1: TMenuItem;
@@ -47,6 +48,8 @@ type
     USlider2: TUSlider;
     UText2: TUText;
     tmrHider: TTimer;
+    ActionList1: TActionList;
+    actEscape: TAction;
     procedure FormCreate(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure USlider1Change(Sender: TObject);
@@ -62,6 +65,8 @@ type
     procedure TrayIcon1Click(Sender: TObject);
     procedure tmrHiderTimer(Sender: TObject);
     procedure About1Click(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure actEscapeExecute(Sender: TObject);
   protected
     { Protected declarations : known to all classes in the hierearchy}
     function GetMainTaskbarPosition:Integer;
@@ -70,12 +75,18 @@ type
     { Private declarations : only known to the parent class }
     fPrevBrightness: Cardinal;
     fPrevContrast: Cardinal;
+
+    procedure WMHotkey(var Msg: TWMHotKey); message WM_HOTKEY;
   public
+    Settings: TSettings;
     { Public declarations : known externally by class users}
+    procedure SetHotKey(Sender: TObject; AHotKey: TShortCut);
+    function AutoStartState:Boolean;
+    procedure SetAutoStart(RunWithWindows: Boolean);
   end;
 
 var
-  Form1: TForm1;
+  formMain: TformMain;
 
 function GetMonitorBrightness (
   hMonitor: THandle; var pdwMinimumBrightness : DWORD;
@@ -151,18 +162,41 @@ begin
   end;
 end;
 
-procedure TForm1.About1Click(Sender: TObject);
+procedure TformMain.About1Click(Sender: TObject);
 begin
   if formSettings.SwitchToPanel(formSettings.cardAbout) then
     formSettings.Show;
 end;
 
-procedure TForm1.Exit1Click(Sender: TObject);
+procedure TformMain.actEscapeExecute(Sender: TObject);
+begin
+  Hide;
+end;
+
+function TformMain.AutoStartState: Boolean;
+var
+  reg: TRegistry;
+begin
+  Result := False;
+  reg := TRegistry.Create;
+  try
+    reg.RootKey := HKEY_CURRENT_USER;
+    reg.OpenKeyReadOnly('SOFTWARE\Microsoft\Windows\CurrentVersion\Run');
+    if reg.ValueExists('MonitorXettings') then
+      if reg.ReadString('MonitorXettings') <> '' then
+        Result := True;
+    reg.CloseKey;
+  finally
+    reg.Free;
+  end;
+end;
+
+procedure TformMain.Exit1Click(Sender: TObject);
 begin
   Close;
 end;
 
-procedure TForm1.FormCreate(Sender: TObject);
+procedure TformMain.FormCreate(Sender: TObject);
 var
   mons: array[0..5] of PHYSICAL_MONITOR;
   monitor: TMonitor;
@@ -170,6 +204,9 @@ var
   I: Integer;
   min, max, cur: Cardinal;
 begin
+  Settings := TSettingsHandler.LoadSettings;
+  SetHotKey(Sender, TextToShortCut(Settings.HotKey));
+
   ThemeManager.ThemeType := ttDark;
   UCaptionBar1.Caption := '   ' + Caption;
   monitor := Screen.MonitorFromWindow(Handle);
@@ -200,7 +237,7 @@ begin
   Application.OnDeactivate := FormDeactivate;
 end;
 
-procedure TForm1.FormDeactivate(Sender: TObject);
+procedure TformMain.FormDeactivate(Sender: TObject);
 var
   TaskbarHandle: THandle;
 begin
@@ -215,13 +252,25 @@ begin
   end;
 end;
 
-procedure TForm1.FormShow(Sender: TObject);
+procedure TformMain.FormDestroy(Sender: TObject);
+begin
+  Settings.Free;
+
+  if GlobalFindAtom('MXHOTKEY') <> 0 then
+  begin
+    UnregisterHotKey(Handle, GlobalFindAtom('MXHOTKEY'));
+    GlobalDeleteAtom(GlobalFindAtom('MXHOTKEY'));
+  end;
+
+end;
+
+procedure TformMain.FormShow(Sender: TObject);
 begin
   // hide from taskbar on form show, form will not be hidden btw
   ShowWindow(Application.Handle, SW_HIDE);
 end;
 
-function TForm1.GetMainTaskbarPosition: Integer;
+function TformMain.GetMainTaskbarPosition: Integer;
 const ABNONE = -1;
 var
   AMonitor: TMonitor;
@@ -263,12 +312,65 @@ begin
   end;
 end;
 
-procedure TForm1.Settings1Click(Sender: TObject);
+procedure TformMain.SetAutoStart(RunWithWindows: Boolean);
+var
+  reg: TRegistry;
+begin
+  reg := TRegistry.Create;
+  try
+    reg.RootKey := HKEY_CURRENT_USER;
+    reg.OpenKey('SOFTWARE\Microsoft\Windows\CurrentVersion\Run', False);
+    if RunWithWindows then
+      reg.WriteString('MonitorXettings', ParamStr(0))
+    else
+      if reg.ValueExists('MonitorXettings') then
+        reg.DeleteValue('MonitorXettings');
+    reg.CloseKey;
+  finally
+    reg.Free;
+  end;
+end;
+
+procedure TformMain.SetHotKey(Sender: TObject; AHotKey: TShortCut);
+var
+  key: WORD;
+  modifier: Integer;
+begin
+  AHotKey := TextToShortCut(Settings.HotKey);
+  key := AHotKey and not (scShift + scCtrl + scAlt);
+  modifier := 0;
+  if AHotKey and scShift <> 0 then modifier := MOD_SHIFT + MOD_NOREPEAT;
+  if AHotKey and scAlt <> 0 then modifier := modifier + MOD_ALT;
+  if AHotKey and scCtrl <> 0 then modifier := modifier + MOD_CONTROL;
+
+  // re-register hotkey
+  if GlobalFindAtom('MXHOTKEY') <> 0 then
+  begin
+    UnregisterHotKey(Handle, GlobalFindAtom('MXHOTKEY'));
+    GlobalDeleteAtom(GlobalFindAtom('MXHOTKEY'));
+  end;
+
+  if not RegisterHotKey(Handle, GlobalAddAtom('MXHOTKEY'), modifier, key) then
+  begin
+    MessageDlg(ShortCutToText(AHotKey) + ' failed to register, try another hotkey.', mtError, [mbOK], 0);
+  end
+  else
+  begin
+    if Sender is TUButton then
+    begin
+      MessageDlg(ShortCutToText(AHotKey) + ' successfully registered.', mtInformation, [mbOK], 0);
+      Settings.HotKey := ShortCutToText(AHotKey);
+      TSettingsHandler.SaveSettings(formMain.Settings);
+    end;
+  end;
+end;
+
+procedure TformMain.Settings1Click(Sender: TObject);
 begin
   formSettings.Visible := not formSettings.Visible;
 end;
 
-procedure TForm1.ShowPopup;
+procedure TformMain.ShowPopup;
 const
   ABE_NONE = -1;
   GAP = 0;
@@ -315,7 +417,7 @@ begin
   SetForegroundWindow(Handle);
 end;
 
-procedure TForm1.Timer1Timer(Sender: TObject);
+procedure TformMain.Timer1Timer(Sender: TObject);
 var
   changed: Boolean;
 begin
@@ -335,7 +437,7 @@ begin
     UButton2Click(Sender);
 end;
 
-procedure TForm1.tmrHiderTimer(Sender: TObject);
+procedure TformMain.tmrHiderTimer(Sender: TObject);
 var
   TaskbarHandle: THandle;
 begin
@@ -355,7 +457,7 @@ begin
   end;
 end;
 
-procedure TForm1.TrayIcon1Click(Sender: TObject);
+procedure TformMain.TrayIcon1Click(Sender: TObject);
 begin
   if not Visible then
     ShowPopup
@@ -363,7 +465,7 @@ begin
     Hide;
 end;
 
-procedure TForm1.UButton1Click(Sender: TObject);
+procedure TformMain.UButton1Click(Sender: TObject);
 begin
 
 // old not working, at least not in non laptops
@@ -382,7 +484,7 @@ begin
   end;
 end;
 
-procedure TForm1.UButton2Click(Sender: TObject);
+procedure TformMain.UButton2Click(Sender: TObject);
 var
   mons: array[0..5] of PHYSICAL_MONITOR;
   monitor: TMonitor;
@@ -411,22 +513,43 @@ begin
 
 end;
 
-procedure TForm1.USlider1Change(Sender: TObject);
+procedure TformMain.USlider1Change(Sender: TObject);
 begin
   UText1.Caption := 'Brightness: ' + USlider1.Value.ToString;
 //  fPrevBrightness := USlider1.Value;
 end;
 
-procedure TForm1.USlider1MouseUp(Sender: TObject; Button: TMouseButton;
+procedure TformMain.USlider1MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
   UButton2Click(Sender);
 end;
 
-procedure TForm1.USlider2Change(Sender: TObject);
+procedure TformMain.USlider2Change(Sender: TObject);
 begin
   UText2.Caption := 'Contrast: ' + USlider2.Value.ToString;
 //  fPrevContrast := USlider2.Value;
+end;
+
+procedure TformMain.WMHotkey(var Msg: TWMHotKey);
+var
+  vMonitor: TMonitor;
+begin
+  if Msg.HotKey = GlobalFindAtom('MXHOTKEY') then
+  begin
+    if formSettings.Visible and formSettings.HotKey1.Focused then
+    begin
+      formSettings.HotKey1.HotKey := TextToShortCut(Settings.HotKey);
+      Exit;
+    end;
+
+    vMonitor := Screen.MonitorFromWindow(Handle);
+    Left := vMonitor.Left + (vMonitor.Width - Width) div 2;
+    Top := vMonitor.Top + (vMonitor.Height - Height) div 2;
+    Show;
+    SetForegroundWindow(Handle);
+  end;
+
 end;
 
 { TUSlider }

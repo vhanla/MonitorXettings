@@ -1,12 +1,16 @@
 program MonitorXettings;
 
 uses
+  {$IFDEF DEBUG}
+  FastMM4,
+  {$ENDIF }
   Vcl.Forms,
   Windows,
   SysUtils,
-  main in 'main.pas' {Form1},
+  main in 'main.pas' {formMain},
   frmSettings in 'frmSettings.pas' {formSettings},
-  taskbar in 'taskbar.pas';
+  taskbar in 'taskbar.pas',
+  settings in 'settings.pas';
 
 {$R *.res}
 
@@ -19,7 +23,7 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := False;
   Application.ShowMainForm := False;
-  Application.CreateForm(TForm1, Form1);
+  Application.CreateForm(TformMain, formMain);
   Application.CreateForm(TformSettings, formSettings);
   Application.Run;
 end.

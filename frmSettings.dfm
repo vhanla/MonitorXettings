@@ -11,6 +11,7 @@ object formSettings: TformSettings
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
   object UCaptionBar1: TUCaptionBar
@@ -24,9 +25,6 @@ object formSettings: TformSettings
     CustomBackColor.Color = 15921906
     CustomBackColor.LightColor = 15921906
     CustomBackColor.DarkColor = 2829099
-    ExplicitLeft = 152
-    ExplicitTop = 192
-    ExplicitWidth = 185
     object UQuickButton1: TUQuickButton
       Left = 513
       Top = 0
@@ -59,7 +57,6 @@ object formSettings: TformSettings
     CustomBackColor.Color = 15132390
     CustomBackColor.LightColor = 15132390
     CustomBackColor.DarkColor = 2039583
-    ExplicitHeight = 341
     object lbGeneral: TUListButton
       Left = 0
       Top = 0
@@ -89,8 +86,6 @@ object formSettings: TformSettings
       CustomBackColor.DarkSelectedPress = 127
       FontIcon = #57621
       Detail = ''
-      ExplicitLeft = -6
-      ExplicitTop = 6
     end
     object lbTriggers: TUListButton
       Left = 0
@@ -121,8 +116,6 @@ object formSettings: TformSettings
       CustomBackColor.DarkSelectedPress = 127
       FontIcon = #59893
       Detail = ''
-      ExplicitTop = 35
-      ExplicitWidth = 129
     end
     object lbSchedule: TUListButton
       Left = 0
@@ -153,7 +146,6 @@ object formSettings: TformSettings
       CustomBackColor.DarkSelectedPress = 127
       FontIcon = #60870
       Detail = ''
-      ExplicitLeft = -6
     end
     object lbAbout: TUListButton
       Left = 0
@@ -184,9 +176,6 @@ object formSettings: TformSettings
       CustomBackColor.DarkSelectedPress = 127
       FontIcon = #59267
       Detail = ''
-      ExplicitLeft = -6
-      ExplicitTop = 300
-      ExplicitWidth = 129
     end
   end
   object CardPanel1: TCardPanel
@@ -201,9 +190,6 @@ object formSettings: TformSettings
     Color = clWhite
     ParentBackground = False
     TabOrder = 2
-    ExplicitLeft = 135
-    ExplicitWidth = 341
-    ExplicitHeight = 341
     object cardGeneral: TCard
       Left = 0
       Top = 0
@@ -212,8 +198,91 @@ object formSettings: TformSettings
       Caption = 'cardGeneral'
       CardIndex = 0
       TabOrder = 0
-      ExplicitWidth = 185
-      ExplicitHeight = 41
+      object UScrollBox1: TUScrollBox
+        Left = 0
+        Top = 0
+        Width = 381
+        Height = 371
+        HorzScrollBar.Tracking = True
+        VertScrollBar.Tracking = True
+        Align = alClient
+        Color = 15132390
+        ParentColor = False
+        TabOrder = 0
+        AniSet.AniKind = akOut
+        AniSet.AniFunctionKind = afkQuintic
+        AniSet.DelayStartTime = 0
+        AniSet.Duration = 120
+        AniSet.Step = 11
+        CustomBackColor.Enabled = False
+        CustomBackColor.Color = 15132390
+        CustomBackColor.LightColor = 15132390
+        CustomBackColor.DarkColor = 2039583
+        object UText3: TUText
+          Left = 24
+          Top = 32
+          Width = 70
+          Height = 13
+          Caption = 'Run at startup'
+        end
+        object UText4: TUText
+          Left = 24
+          Top = 82
+          Width = 78
+          Height = 13
+          Caption = 'Bring Up HotKey'
+        end
+        object EsSwitch1: TEsSwitch
+          Left = 24
+          Top = 51
+          Width = 44
+          Height = 20
+          TabOrder = 1
+          OnClick = EsSwitch1Click
+        end
+        object HotKey1: THotKey
+          Left = 24
+          Top = 104
+          Width = 329
+          Height = 20
+          HotKey = 0
+          Modifiers = []
+          TabOrder = 2
+        end
+        object btnSaveHotkey: TUButton
+          Left = 24
+          Top = 130
+          Width = 129
+          Caption = 'Save/Apply Hotkey'
+          OnClick = btnSaveHotkeyClick
+          CustomBackColor.Enabled = False
+          CustomBackColor.LightNone = 13421772
+          CustomBackColor.LightHover = 13421772
+          CustomBackColor.LightPress = 10066329
+          CustomBackColor.LightSelectedNone = 13421772
+          CustomBackColor.LightSelectedHover = 13421772
+          CustomBackColor.LightSelectedPress = 10066329
+          CustomBackColor.DarkNone = 3355443
+          CustomBackColor.DarkHover = 3355443
+          CustomBackColor.DarkPress = 6710886
+          CustomBackColor.DarkSelectedNone = 3355443
+          CustomBackColor.DarkSelectedHover = 3355443
+          CustomBackColor.DarkSelectedPress = 6710886
+          CustomBorderColor.Enabled = False
+          CustomBorderColor.LightNone = 13421772
+          CustomBorderColor.LightHover = 8026746
+          CustomBorderColor.LightPress = 10066329
+          CustomBorderColor.LightSelectedNone = 8026746
+          CustomBorderColor.LightSelectedHover = 8026746
+          CustomBorderColor.LightSelectedPress = 10066329
+          CustomBorderColor.DarkNone = 3355443
+          CustomBorderColor.DarkHover = 8750469
+          CustomBorderColor.DarkPress = 6710886
+          CustomBorderColor.DarkSelectedNone = 8750469
+          CustomBorderColor.DarkSelectedHover = 8750469
+          CustomBorderColor.DarkSelectedPress = 6710886
+        end
+      end
     end
     object cardTriggers: TCard
       Left = 0
@@ -223,8 +292,6 @@ object formSettings: TformSettings
       Caption = 'cardTriggers'
       CardIndex = 1
       TabOrder = 1
-      ExplicitWidth = 185
-      ExplicitHeight = 41
     end
     object cardSchedule: TCard
       Left = 0
@@ -234,8 +301,6 @@ object formSettings: TformSettings
       Caption = 'cardSchedule'
       CardIndex = 2
       TabOrder = 2
-      ExplicitWidth = 185
-      ExplicitHeight = 41
     end
     object cardAbout: TCard
       Left = 0
@@ -245,8 +310,6 @@ object formSettings: TformSettings
       Caption = 'cardAbout'
       CardIndex = 3
       TabOrder = 3
-      ExplicitWidth = 185
-      ExplicitHeight = 41
       object UText1: TUText
         Left = 16
         Top = 14

@@ -1,11 +1,13 @@
-object Form1: TForm1
+object formMain: TformMain
   Left = 0
   Top = 0
   AlphaBlend = True
   AlphaBlendValue = 200
+  BorderIcons = []
+  BorderStyle = bsSingle
   Caption = 'Monitor Adjuster'
-  ClientHeight = 170
-  ClientWidth = 447
+  ClientHeight = 142
+  ClientWidth = 355
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,14 +17,15 @@ object Form1: TForm1
   FormStyle = fsStayOnTop
   OldCreateOrder = False
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnDeactivate = FormDeactivate
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object USlider1: TUSlider
     Left = 8
-    Top = 65
-    Width = 425
+    Top = 57
+    Width = 337
     OnMouseUp = USlider1MouseUp
     CustomBackColor.Enabled = False
     CustomBackColor.LightNone = 10066329
@@ -54,15 +57,15 @@ object Form1: TForm1
   end
   object UText1: TUText
     Left = 8
-    Top = 46
+    Top = 38
     Width = 35
     Height = 13
     Caption = 'UText1'
   end
   object USlider2: TUSlider
     Left = 8
-    Top = 123
-    Width = 425
+    Top = 107
+    Width = 328
     OnMouseUp = USlider1MouseUp
     CustomBackColor.Enabled = False
     CustomBackColor.LightNone = 10066329
@@ -94,7 +97,7 @@ object Form1: TForm1
   end
   object UText2: TUText
     Left = 8
-    Top = 104
+    Top = 88
     Width = 35
     Height = 13
     Caption = 'UText1'
@@ -102,7 +105,7 @@ object Form1: TForm1
   object UCaptionBar1: TUCaptionBar
     Left = 0
     Top = 0
-    Width = 447
+    Width = 355
     Caption = '   Caption bar'
     Color = 15921906
     TabOrder = 0
@@ -110,8 +113,9 @@ object Form1: TForm1
     CustomBackColor.Color = 15921906
     CustomBackColor.LightColor = 15921906
     CustomBackColor.DarkColor = 2829099
+    DragToMove = False
     object UQuickButton1: TUQuickButton
-      Left = 402
+      Left = 310
       Top = 0
       Align = alRight
       Font.Charset = DEFAULT_CHARSET
@@ -202,8 +206,8 @@ object Form1: TForm1
     Top = 104
   end
   object PopupMenu1: TPopupMenu
-    Left = 296
-    Top = 96
+    Left = 256
+    Top = 40
     object Settings1: TMenuItem
       Caption = '&Settings'
       OnClick = Settings1Click
@@ -232,5 +236,14 @@ object Form1: TForm1
     OnTimer = tmrHiderTimer
     Left = 376
     Top = 56
+  end
+  object ActionList1: TActionList
+    Left = 112
+    Top = 40
+    object actEscape: TAction
+      Caption = 'actEscape'
+      ShortCut = 27
+      OnExecute = actEscapeExecute
+    end
   end
 end

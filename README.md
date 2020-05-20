@@ -9,7 +9,7 @@ Simple tool for Windows 10 to change monitor's brightness and/or contrast if mon
   - Fullscreen
 - [ ] Change monitor settings on schedule:
   - Time
-- [ ] Hotkey support to bring up as OSD in order to temporary modify current monitor settings
+- [x] Hotkey support to bring up as OSD in order to temporary modify current monitor settings
 - [x] Show in taskbar, like official Windows 10 system tools (eg. volume)
 - [ ] PostMessage API to allow other applications to change it via this Windows API
   - Params like (contrast, brightness, etc.)

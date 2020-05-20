@@ -14,6 +14,7 @@ Simple tool for Windows 10 to change monitor's brightness and/or contrast if mon
 - [ ] PostMessage API to allow other applications to change it via this Windows API
   - Params like (contrast, brightness, etc.)
 - [ ] Command Line params to allow other tools to launch if they can't use PostMessage
+- [ ] Change monitors screen resolution
 
 ![snap](https://pbs.twimg.com/media/EX-4hq0UMAAzqlM?format=png)
 

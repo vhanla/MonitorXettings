@@ -1,9 +1,9 @@
-object Form2: TForm2
+object formSettings: TformSettings
   Left = 0
   Top = 0
   Caption = 'Settings'
-  ClientHeight = 373
-  ClientWidth = 470
+  ClientHeight = 403
+  ClientWidth = 558
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -13,4 +13,261 @@ object Form2: TForm2
   OldCreateOrder = False
   PixelsPerInch = 96
   TextHeight = 13
+  object UCaptionBar1: TUCaptionBar
+    Left = 0
+    Top = 0
+    Width = 558
+    Caption = '   Settings'
+    Color = 15921906
+    TabOrder = 0
+    CustomBackColor.Enabled = False
+    CustomBackColor.Color = 15921906
+    CustomBackColor.LightColor = 15921906
+    CustomBackColor.DarkColor = 2829099
+    ExplicitLeft = 152
+    ExplicitTop = 192
+    ExplicitWidth = 185
+    object UQuickButton1: TUQuickButton
+      Left = 513
+      Top = 0
+      Align = alRight
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Segoe MDL2 Assets'
+      Font.Style = []
+      ParentFont = False
+      CustomBackColor.Enabled = False
+      CustomBackColor.Color = clBlack
+      CustomBackColor.LightColor = 13619151
+      CustomBackColor.DarkColor = 3947580
+      ButtonStyle = qbsQuit
+      Caption = #57610
+      ExplicitLeft = 344
+      ExplicitTop = 16
+    end
+  end
+  object UPanel1: TUPanel
+    Left = 0
+    Top = 32
+    Width = 177
+    Height = 371
+    Align = alLeft
+    Color = 15132390
+    TabOrder = 1
+    CustomBackColor.Enabled = False
+    CustomBackColor.Color = 15132390
+    CustomBackColor.LightColor = 15132390
+    CustomBackColor.DarkColor = 2039583
+    ExplicitHeight = 341
+    object lbGeneral: TUListButton
+      Left = 0
+      Top = 0
+      Width = 177
+      Height = 41
+      Align = alTop
+      Caption = 'General'
+      TabOrder = 0
+      OnClick = lbGeneralClick
+      IconFont.Charset = DEFAULT_CHARSET
+      IconFont.Color = clWindowText
+      IconFont.Height = -16
+      IconFont.Name = 'Segoe MDL2 Assets'
+      IconFont.Style = []
+      CustomBackColor.Enabled = False
+      CustomBackColor.LightNone = 15132390
+      CustomBackColor.LightHover = 13619151
+      CustomBackColor.LightPress = 12105912
+      CustomBackColor.LightSelectedNone = 127
+      CustomBackColor.LightSelectedHover = 103
+      CustomBackColor.LightSelectedPress = 89
+      CustomBackColor.DarkNone = 2039583
+      CustomBackColor.DarkHover = 3487029
+      CustomBackColor.DarkPress = 5000268
+      CustomBackColor.DarkSelectedNone = 89
+      CustomBackColor.DarkSelectedHover = 103
+      CustomBackColor.DarkSelectedPress = 127
+      FontIcon = #57621
+      Detail = ''
+      ExplicitLeft = 40
+      ExplicitTop = 144
+      ExplicitWidth = 185
+    end
+    object lbTriggers: TUListButton
+      Left = 0
+      Top = 41
+      Width = 177
+      Height = 41
+      Align = alTop
+      Caption = 'Triggers'
+      TabOrder = 1
+      OnClick = lbTriggersClick
+      IconFont.Charset = DEFAULT_CHARSET
+      IconFont.Color = clWindowText
+      IconFont.Height = -16
+      IconFont.Name = 'Segoe MDL2 Assets'
+      IconFont.Style = []
+      CustomBackColor.Enabled = False
+      CustomBackColor.LightNone = 15132390
+      CustomBackColor.LightHover = 13619151
+      CustomBackColor.LightPress = 12105912
+      CustomBackColor.LightSelectedNone = 127
+      CustomBackColor.LightSelectedHover = 103
+      CustomBackColor.LightSelectedPress = 89
+      CustomBackColor.DarkNone = 2039583
+      CustomBackColor.DarkHover = 3487029
+      CustomBackColor.DarkPress = 5000268
+      CustomBackColor.DarkSelectedNone = 89
+      CustomBackColor.DarkSelectedHover = 103
+      CustomBackColor.DarkSelectedPress = 127
+      FontIcon = #59893
+      Detail = ''
+      ExplicitTop = 35
+      ExplicitWidth = 129
+    end
+    object lbSchedule: TUListButton
+      Left = 0
+      Top = 82
+      Width = 177
+      Height = 41
+      Align = alTop
+      Caption = 'Schedule'
+      TabOrder = 2
+      OnClick = lbScheduleClick
+      IconFont.Charset = DEFAULT_CHARSET
+      IconFont.Color = clWindowText
+      IconFont.Height = -16
+      IconFont.Name = 'Segoe MDL2 Assets'
+      IconFont.Style = []
+      CustomBackColor.Enabled = False
+      CustomBackColor.LightNone = 15132390
+      CustomBackColor.LightHover = 13619151
+      CustomBackColor.LightPress = 12105912
+      CustomBackColor.LightSelectedNone = 127
+      CustomBackColor.LightSelectedHover = 103
+      CustomBackColor.LightSelectedPress = 89
+      CustomBackColor.DarkNone = 2039583
+      CustomBackColor.DarkHover = 3487029
+      CustomBackColor.DarkPress = 5000268
+      CustomBackColor.DarkSelectedNone = 89
+      CustomBackColor.DarkSelectedHover = 103
+      CustomBackColor.DarkSelectedPress = 127
+      FontIcon = #60870
+      Detail = ''
+      ExplicitLeft = -6
+    end
+    object lbAbout: TUListButton
+      Left = 0
+      Top = 330
+      Width = 177
+      Height = 41
+      Align = alBottom
+      Caption = 'About'
+      TabOrder = 3
+      OnClick = lbAboutClick
+      IconFont.Charset = DEFAULT_CHARSET
+      IconFont.Color = clWindowText
+      IconFont.Height = -16
+      IconFont.Name = 'Segoe MDL2 Assets'
+      IconFont.Style = []
+      CustomBackColor.Enabled = False
+      CustomBackColor.LightNone = 15132390
+      CustomBackColor.LightHover = 13619151
+      CustomBackColor.LightPress = 12105912
+      CustomBackColor.LightSelectedNone = 127
+      CustomBackColor.LightSelectedHover = 103
+      CustomBackColor.LightSelectedPress = 89
+      CustomBackColor.DarkNone = 2039583
+      CustomBackColor.DarkHover = 3487029
+      CustomBackColor.DarkPress = 5000268
+      CustomBackColor.DarkSelectedNone = 89
+      CustomBackColor.DarkSelectedHover = 103
+      CustomBackColor.DarkSelectedPress = 127
+      FontIcon = #59267
+      Detail = ''
+      ExplicitLeft = -6
+      ExplicitTop = 300
+      ExplicitWidth = 129
+    end
+  end
+  object CardPanel1: TCardPanel
+    Left = 177
+    Top = 32
+    Width = 381
+    Height = 371
+    Align = alClient
+    ActiveCard = cardGeneral
+    BevelOuter = bvNone
+    Caption = 'CardPanel1'
+    Color = clWhite
+    ParentBackground = False
+    TabOrder = 2
+    ExplicitLeft = 135
+    ExplicitWidth = 341
+    ExplicitHeight = 341
+    object cardGeneral: TCard
+      Left = 0
+      Top = 0
+      Width = 381
+      Height = 371
+      Caption = 'cardGeneral'
+      CardIndex = 0
+      TabOrder = 0
+      ExplicitWidth = 185
+      ExplicitHeight = 41
+    end
+    object cardTriggers: TCard
+      Left = 0
+      Top = 0
+      Width = 381
+      Height = 371
+      Caption = 'cardTriggers'
+      CardIndex = 1
+      TabOrder = 1
+      ExplicitWidth = 185
+      ExplicitHeight = 41
+    end
+    object cardSchedule: TCard
+      Left = 0
+      Top = 0
+      Width = 381
+      Height = 371
+      Caption = 'cardSchedule'
+      CardIndex = 2
+      TabOrder = 2
+      ExplicitWidth = 185
+      ExplicitHeight = 41
+    end
+    object cardAbout: TCard
+      Left = 0
+      Top = 0
+      Width = 381
+      Height = 371
+      Caption = 'cardAbout'
+      CardIndex = 3
+      TabOrder = 3
+      ExplicitWidth = 185
+      ExplicitHeight = 41
+      object UText1: TUText
+        Left = 16
+        Top = 14
+        Width = 165
+        Height = 19
+        Caption = 'Monitor Settings X v1.0'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -16
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+      end
+      object UText2: TUText
+        Left = 16
+        Top = 55
+        Width = 170
+        Height = 13
+        Caption = 'Author: Victor Alberto Gil <vhanla>'
+      end
+    end
+  end
 end

@@ -2,7 +2,7 @@ object Form1: TForm1
   Left = 0
   Top = 0
   AlphaBlend = True
-  AlphaBlendValue = 189
+  AlphaBlendValue = 200
   Caption = 'Monitor Adjuster'
   ClientHeight = 170
   ClientWidth = 447
@@ -12,8 +12,11 @@ object Form1: TForm1
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
+  FormStyle = fsStayOnTop
   OldCreateOrder = False
   OnCreate = FormCreate
+  OnDeactivate = FormDeactivate
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object USlider1: TUSlider
@@ -121,7 +124,6 @@ object Form1: TForm1
       CustomBackColor.Color = clBlack
       CustomBackColor.LightColor = 13619151
       CustomBackColor.DarkColor = 3947580
-      ButtonStyle = qbsQuit
       Caption = #59761
       ExplicitLeft = 352
     end
@@ -195,7 +197,7 @@ object Form1: TForm1
   object TrayIcon1: TTrayIcon
     PopupMenu = PopupMenu1
     Visible = True
-    OnDblClick = TrayIcon1DblClick
+    OnClick = TrayIcon1Click
     Left = 216
     Top = 104
   end
@@ -222,5 +224,12 @@ object Form1: TForm1
     OnTimer = Timer1Timer
     Left = 88
     Top = 120
+  end
+  object tmrHider: TTimer
+    Enabled = False
+    Interval = 500
+    OnTimer = tmrHiderTimer
+    Left = 376
+    Top = 56
   end
 end

@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus, UCL.Form,
   UCL.CaptionBar, UCL.Classes, UCL.Button, UCL.Slider, UCL.Text, ComObj, ActiveX,
-  UCL.QuickButton, UCL.ThemeManager;
+  UCL.QuickButton, UCL.ThemeManager, ShellApi;
 
 type
   PHYSICAL_MONITOR = record
@@ -46,6 +46,7 @@ type
     UButton2: TUButton;
     USlider2: TUSlider;
     UText2: TUText;
+    tmrHider: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure USlider1Change(Sender: TObject);
@@ -56,13 +57,20 @@ type
     procedure USlider2Change(Sender: TObject);
     procedure Exit1Click(Sender: TObject);
     procedure Settings1Click(Sender: TObject);
-    procedure TrayIcon1DblClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure FormDeactivate(Sender: TObject);
+    procedure TrayIcon1Click(Sender: TObject);
+    procedure tmrHiderTimer(Sender: TObject);
+  protected
+    { Protected declarations : known to all classes in the hierearchy}
+    function GetMainTaskbarPosition:Integer;
+    procedure ShowPopup;
   private
-    { Private declarations }
+    { Private declarations : only known to the parent class }
     fPrevBrightness: Cardinal;
     fPrevContrast: Cardinal;
   public
-    { Public declarations }
+    { Public declarations : known externally by class users}
   end;
 
 var
@@ -100,6 +108,7 @@ function DestroyPhysicalMonitors(dwPhysicalMonitorArraySize: DWORD;
 implementation
 
 {$R *.dfm}
+uses frmSettings;
 
 procedure SetBrightness(Timeout: Integer; Brightness: Byte);
 var
@@ -181,11 +190,122 @@ begin
     DestroyPhysicalMonitors(num, @mons);
   end;
 
+  Application.OnDeactivate := FormDeactivate;
+end;
+
+procedure TForm1.FormDeactivate(Sender: TObject);
+var
+  TaskbarHandle: THandle;
+begin
+  TaskbarHandle := FindWindow('Shell_TrayWnd', nil);
+  if TaskbarHandle <> 0 then
+  begin
+    if (GetForegroundWindow <> Handle)
+    and (GetForegroundWindow <> TaskbarHandle) then
+    Hide;
+    if GetForegroundWindow = TaskbarHandle then
+      tmrHider.Enabled := True;
+  end;
+end;
+
+procedure TForm1.FormShow(Sender: TObject);
+begin
+  // hide from taskbar on form show, form will not be hidden btw
+  ShowWindow(Application.Handle, SW_HIDE);
+end;
+
+function TForm1.GetMainTaskbarPosition: Integer;
+const ABNONE = -1;
+var
+  AMonitor: TMonitor;
+  TaskbarHandle: THandle;
+  ABData: TAppbarData;
+  Res: HRESULT;
+  TaskbarRect: TRect;
+begin
+  Result := ABNONE;
+  Res := SHAppBarMessage(ABM_GETTASKBARPOS, ABData);
+  if BOOL(Res) then
+  begin
+    // return ABE_LEFT=0, ABE_TOP, ABE_RIGHT or ABE_BOTTOM values
+    Result := ABData.uEdge;
+  end
+  else // for some unknown this might fail, so lets do it the hard way
+  begin
+    TaskbarHandle := FindWindow('Shell_TrayWnd', nil);
+    if TaskbarHandle <> 0 then
+    begin
+      AMonitor := Screen.MonitorFromWindow(TaskbarHandle);
+      GetWindowRect(TaskbarHandle, TaskbarRect);
+      if (AMonitor.Left = TaskbarRect.Left) and (AMonitor.Top = TaskbarRect.Top)
+      and (AMonitor.Width = TaskbarRect.Width)
+      then
+        Result := ABE_TOP
+      else if (AMonitor.Left + AMonitor.Width = TaskbarRect.Right)
+      and (AMonitor.Width <> TaskbarRect.Width)
+      then
+        Result := ABE_RIGHT
+      else if (AMonitor.Left = TaskbarRect.Left) and (AMonitor.Top + AMonitor.Height = TaskbarRect.Bottom)
+      and (AMonitor.Width = TaskbarRect.Width)
+      then
+        Result := ABE_BOTTOM
+      else
+        Result := ABE_LEFT;
+    end;
+    // at this point, there is no Taskbar present, maybe explorer is not running
+  end;
 end;
 
 procedure TForm1.Settings1Click(Sender: TObject);
 begin
+  formSettings.Visible := not formSettings.Visible;
+end;
+
+procedure TForm1.ShowPopup;
+const
+  ABE_NONE = -1;
+  GAP = 0;
+var
+  TaskbarMonitor: THandle;
+  TaskbarRect: TRect;
+  AMonitor: TMonitor;
+  CurPos: TPoint;
+  LeftGap: Integer;
+  TopGap: Integer;
+begin
+  TaskbarMonitor := FindWindow('Shell_TrayWnd', nil);
+  GetCursorPos(CurPos);
+  LeftGap := Width - ClientWidth;
+  TopGap := Height - ClientHeight;
+  if TaskbarMonitor <> 0 then
+  begin
+    AMonitor := Screen.MonitorFromWindow(TaskbarMonitor);
+    GetWindowRect(TaskbarMonitor, TaskbarRect);
+    case GetMainTaskbarPosition of
+      ABE_LEFT: begin
+        Left := AMonitor.Left + TaskbarRect.Width + GAP - LeftGap div 2;
+        Top := CurPos.Y - Height div 2;
+        end;
+      ABE_TOP: begin
+        Left := AMonitor.Left + AMonitor.Width - Width - GAP + LeftGap;
+        Top := AMonitor.Top + TaskbarRect.Height + GAP - TopGap;
+        end;
+      ABE_RIGHT: begin
+        Left := AMonitor.Left + AMonitor.Width - TaskbarRect.Width - Width - GAP + LeftGap div 2;
+        Top := CurPos.Y - Height div 2;
+        end;
+      ABE_BOTTOM: begin
+        Left := AMonitor.Left + AMonitor.Width - Width - GAP + LeftGap;
+        Top := AMonitor.Top + AMonitor.Height - TaskbarRect.Height - Height - GAP + TopGap;
+        end;
+      ABE_NONE: begin
+        Position := poScreenCenter;
+        end;
+    end;
+  end;
+
   Visible := not Visible;
+  SetForegroundWindow(Handle);
 end;
 
 procedure TForm1.Timer1Timer(Sender: TObject);
@@ -208,9 +328,32 @@ begin
     UButton2Click(Sender);
 end;
 
-procedure TForm1.TrayIcon1DblClick(Sender: TObject);
+procedure TForm1.tmrHiderTimer(Sender: TObject);
+var
+  TaskbarHandle: THandle;
 begin
-  Visible := not Visible;
+  if GetForegroundWindow = Handle then
+    tmrHider.Enabled := False
+  else
+  begin
+    TaskbarHandle := FindWindow('Shell_TrayWnd', nil);
+    if TaskbarHandle <> 0 then
+    begin
+      if GetForegroundWindow <> TaskbarHandle then
+      begin
+        Hide;
+        tmrHider.Enabled := False;
+      end;
+    end;
+  end;
+end;
+
+procedure TForm1.TrayIcon1Click(Sender: TObject);
+begin
+  if not Visible then
+    ShowPopup
+  else
+    Hide;
 end;
 
 procedure TForm1.UButton1Click(Sender: TObject);

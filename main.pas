@@ -336,7 +336,8 @@ var
   key: WORD;
   modifier: Integer;
 begin
-  AHotKey := TextToShortCut(Settings.HotKey);
+  if Sender is TformMain then
+    AHotKey := TextToShortCut(Settings.HotKey);
   key := AHotKey and not (scShift + scCtrl + scAlt);
   modifier := 0;
   if AHotKey and scShift <> 0 then modifier := MOD_SHIFT + MOD_NOREPEAT;

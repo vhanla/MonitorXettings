@@ -1,4 +1,4 @@
-program MonoitorSettings;
+program MonitorXettings;
 
 uses
   Vcl.Forms,

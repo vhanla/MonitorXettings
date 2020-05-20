@@ -30,8 +30,11 @@ type
     procedure lbGeneralClick(Sender: TObject);
   private
     { Private declarations }
+    fLockedPanel: Boolean; // lock to switch, maybe some changes needs saving before that
+    { Public declarations }
   public
     { Public declarations }
+    function SwitchToPanel(Panel: TCard): Boolean;
   end;
 
 var
@@ -43,22 +46,32 @@ implementation
 
 procedure TformSettings.lbAboutClick(Sender: TObject);
 begin
-  CardPanel1.ActiveCard := cardAbout;
+  SwitchToPanel(cardAbout);
 end;
 
 procedure TformSettings.lbGeneralClick(Sender: TObject);
 begin
-  CardPanel1.ActiveCard := cardGeneral;
+  SwitchToPanel(cardGeneral);
 end;
 
 procedure TformSettings.lbScheduleClick(Sender: TObject);
 begin
-  CardPanel1.ActiveCard := cardSchedule;
+  SwitchToPanel(cardSchedule);
 end;
 
 procedure TformSettings.lbTriggersClick(Sender: TObject);
 begin
-  CardPanel1.ActiveCard := cardTriggers;
+  SwitchToPanel(cardTriggers);
+end;
+
+function TformSettings.SwitchToPanel(Panel: TCard): Boolean;
+begin
+  Result := False;
+  if not fLockedPanel then
+  begin
+    CardPanel1.ActiveCard := Panel;
+    Result := True;
+  end;
 end;
 
 end.

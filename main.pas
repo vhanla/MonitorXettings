@@ -61,6 +61,7 @@ type
     procedure FormDeactivate(Sender: TObject);
     procedure TrayIcon1Click(Sender: TObject);
     procedure tmrHiderTimer(Sender: TObject);
+    procedure About1Click(Sender: TObject);
   protected
     { Protected declarations : known to all classes in the hierearchy}
     function GetMainTaskbarPosition:Integer;
@@ -148,6 +149,12 @@ begin
     Result := FWbemObject.Properties['CurrentBrightness'].Value;
     FWbemObject := Unassigned;
   end;
+end;
+
+procedure TForm1.About1Click(Sender: TObject);
+begin
+  if formSettings.SwitchToPanel(formSettings.cardAbout) then
+    formSettings.Show;
 end;
 
 procedure TForm1.Exit1Click(Sender: TObject);

@@ -89,9 +89,8 @@ object formSettings: TformSettings
       CustomBackColor.DarkSelectedPress = 127
       FontIcon = #57621
       Detail = ''
-      ExplicitLeft = 40
-      ExplicitTop = 144
-      ExplicitWidth = 185
+      ExplicitLeft = -6
+      ExplicitTop = 6
     end
     object lbTriggers: TUListButton
       Left = 0

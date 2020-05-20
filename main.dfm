@@ -210,6 +210,7 @@ object Form1: TForm1
     end
     object About1: TMenuItem
       Caption = '&About'
+      OnClick = About1Click
     end
     object N1: TMenuItem
       Caption = '-'

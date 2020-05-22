@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{94D63B4E-EDCF-4624-8AA5-07619668C33E}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="MonitorXettings.dproj">
+            <Dependencies>SystemHooks.dproj</Dependencies>
+        </Projects>
+        <Projects Include="SystemHooks.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="MonitorXettings" DependsOnTargets="SystemHooks">
+        <MSBuild Projects="MonitorXettings.dproj"/>
+    </Target>
+    <Target Name="MonitorXettings:Clean" DependsOnTargets="SystemHooks:Clean">
+        <MSBuild Projects="MonitorXettings.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="MonitorXettings:Make" DependsOnTargets="SystemHooks:Make">
+        <MSBuild Projects="MonitorXettings.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="SystemHooks">
+        <MSBuild Projects="SystemHooks.dproj"/>
+    </Target>
+    <Target Name="SystemHooks:Clean">
+        <MSBuild Projects="SystemHooks.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="SystemHooks:Make">
+        <MSBuild Projects="SystemHooks.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="MonitorXettings;SystemHooks"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="MonitorXettings:Clean;SystemHooks:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="MonitorXettings:Make;SystemHooks:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

@@ -7,7 +7,10 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus, UCL.Form,
   UCL.CaptionBar, UCL.Classes, UCL.Button, UCL.Slider, UCL.Text, ComObj, ActiveX,
   UCL.QuickButton, UCL.ThemeManager, ShellApi, settings, System.Actions,
-  Vcl.ActnList, Registry;
+  Vcl.ActnList, Registry, Winapi.Hooks;
+
+const
+  WM_SHELLEVENT = WM_USER + 11;
 
 type
   PHYSICAL_MONITOR = record
@@ -71,12 +74,14 @@ type
     { Protected declarations : known to all classes in the hierearchy}
     function GetMainTaskbarPosition:Integer;
     procedure ShowPopup;
+    procedure CreateParams(var Params: TCreateParams); override;
   private
     { Private declarations : only known to the parent class }
     fPrevBrightness: Cardinal;
     fPrevContrast: Cardinal;
 
     procedure WMHotkey(var Msg: TWMHotKey); message WM_HOTKEY;
+    procedure ShellEvent(var Msg: TMessage); message WM_SHELLEVENT;
   public
     Settings: TSettings;
     { Public declarations : known externally by class users}
@@ -117,6 +122,11 @@ function GetPhysicalMonitorsFromHMONITOR(hMonitor: THandle;
 function DestroyPhysicalMonitors(dwPhysicalMonitorArraySize: DWORD;
   pPhysicalMonitorArray: Pointer): Boolean; stdcall;
   external 'Dxva2.dll' name 'DestroyPhysicalMonitors';
+
+function RunHook(aHandle: HWND): BOOL; stdcall;
+  external 'SystemHooks.dll' name 'RunHook';
+function KillHook: BOOL; stdcall;
+  external 'SystemHooks.dll' name 'KillHook';
 implementation
 
 {$R *.dfm}
@@ -191,6 +201,13 @@ begin
   end;
 end;
 
+procedure TformMain.CreateParams(var Params: TCreateParams);
+begin
+  inherited;
+
+  Params.WinClassName := 'MonitorXettingsHwnd';
+end;
+
 procedure TformMain.Exit1Click(Sender: TObject);
 begin
   Close;
@@ -203,7 +220,11 @@ var
   num: DWORD;
   I: Integer;
   min, max, cur: Cardinal;
+//  value: MINIMIZEDMETRICS;
 begin
+//  value.cbSize := SizeOf(MINIMIZEDMETRICS);
+//  value.iArrange := ARW_HIDE;
+//  SystemParametersInfo(SPI_SETMINIMIZEDMETRICS, SizeOf(value), @value, SPIF_UPDATEINIFILE or SPIF_SENDCHANGE);
   Settings := TSettingsHandler.LoadSettings;
   SetHotKey(Sender, TextToShortCut(Settings.HotKey));
 
@@ -235,6 +256,9 @@ begin
   end;
 
   Application.OnDeactivate := FormDeactivate;
+
+  // Hook WH_SHELL
+  RunHook(Handle);
 end;
 
 procedure TformMain.FormDeactivate(Sender: TObject);
@@ -254,6 +278,7 @@ end;
 
 procedure TformMain.FormDestroy(Sender: TObject);
 begin
+  KillHook;
   Settings.Free;
 
   if GlobalFindAtom('MXHOTKEY') <> 0 then
@@ -369,6 +394,26 @@ end;
 procedure TformMain.Settings1Click(Sender: TObject);
 begin
   formSettings.Visible := not formSettings.Visible;
+end;
+
+procedure TformMain.ShellEvent(var Msg: TMessage);
+var
+  title: array[0..255] of char;
+  titleLen: Integer;
+  LHWindow: HWND;
+begin
+  LHWindow := Msg.WParam;
+  if GetForegroundWindow = LHWindow then
+  begin
+    titleLen := GetWindowTextLength(LHWindow);
+    if titleLen > 0 then
+    begin
+      GetWindowText(LHWindow, title, titleLen + 1);
+      UCaptionBar1.Caption := title;
+      TrayIcon1.Hint := title;
+    end;
+
+  end;
 end;
 
 procedure TformMain.ShowPopup;

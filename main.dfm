@@ -246,4 +246,9 @@ object formMain: TformMain
       OnExecute = actEscapeExecute
     end
   end
+  object tmr64HelperPersist: TTimer
+    OnTimer = tmr64HelperPersistTimer
+    Left = 176
+    Top = 48
+  end
 end

@@ -9,6 +9,9 @@
         <Projects Include="SystemHooks.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="SystemHooks64.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -35,14 +38,23 @@
     <Target Name="SystemHooks:Make">
         <MSBuild Projects="SystemHooks.dproj" Targets="Make"/>
     </Target>
+    <Target Name="SystemHooks64">
+        <MSBuild Projects="SystemHooks64.dproj"/>
+    </Target>
+    <Target Name="SystemHooks64:Clean">
+        <MSBuild Projects="SystemHooks64.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="SystemHooks64:Make">
+        <MSBuild Projects="SystemHooks64.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="MonitorXettings;SystemHooks"/>
+        <CallTarget Targets="MonitorXettings;SystemHooks;SystemHooks64"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="MonitorXettings:Clean;SystemHooks:Clean"/>
+        <CallTarget Targets="MonitorXettings:Clean;SystemHooks:Clean;SystemHooks64:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="MonitorXettings:Make;SystemHooks:Make"/>
+        <CallTarget Targets="MonitorXettings:Make;SystemHooks:Make;SystemHooks64:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

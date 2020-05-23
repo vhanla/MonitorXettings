@@ -7,12 +7,13 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus, UCL.Form,
   UCL.CaptionBar, UCL.Classes, UCL.Button, UCL.Slider, UCL.Text, ComObj, ActiveX,
   UCL.QuickButton, UCL.ThemeManager, ShellApi, settings, System.Actions,
-  Vcl.ActnList, Registry, Winapi.Hooks;
+  Vcl.ActnList, Registry;
 
 const
   WM_SHELLEVENT = WM_USER + 11;
 
 type
+  WinIsWow64 = function(aHandle: THandle; var Iret: BOOL): Winapi.Windows.BOOL; stdcall;
   PHYSICAL_MONITOR = record
     hPhysicalMonitor: THandle;
     szPhysicalMonitorDescription: array[0..127] of Char;
@@ -53,6 +54,7 @@ type
     tmrHider: TTimer;
     ActionList1: TActionList;
     actEscape: TAction;
+    tmr64HelperPersist: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure USlider1Change(Sender: TObject);
@@ -70,6 +72,7 @@ type
     procedure About1Click(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure actEscapeExecute(Sender: TObject);
+    procedure tmr64HelperPersistTimer(Sender: TObject);
   protected
     { Protected declarations : known to all classes in the hierearchy}
     function GetMainTaskbarPosition:Integer;
@@ -82,6 +85,7 @@ type
 
     procedure WMHotkey(var Msg: TWMHotKey); message WM_HOTKEY;
     procedure ShellEvent(var Msg: TMessage); message WM_SHELLEVENT;
+    function Is64bits: Boolean;
   public
     Settings: TSettings;
     { Public declarations : known externally by class users}
@@ -259,6 +263,15 @@ begin
 
   // Hook WH_SHELL
   RunHook(Handle);
+  // Run hook helper if 64 bit Windows
+  if Is64bits then
+  begin
+    ShellExecute(Handle, PChar('OPEN'),PChar(ExtractFilePath(ParamStr(0))+'SystemHooks64.exe'),nil,nil,SW_SHOWNOACTIVATE);
+    // let's persist so if someone kills this process, we launch it again
+    tmr64HelperPersist.Enabled := True;
+  end
+  else
+    tmr64HelperPersist.Enabled := False;
 end;
 
 procedure TformMain.FormDeactivate(Sender: TObject);
@@ -287,6 +300,10 @@ begin
     GlobalDeleteAtom(GlobalFindAtom('MXHOTKEY'));
   end;
 
+  if Is64bits then
+  begin
+    SendMessage(FindWindow('MonitorXettings64Hwnd', nil),WM_CLOSE,0,0);
+  end;
 end;
 
 procedure TformMain.FormShow(Sender: TObject);
@@ -334,6 +351,21 @@ begin
         Result := ABE_LEFT;
     end;
     // at this point, there is no Taskbar present, maybe explorer is not running
+  end;
+end;
+
+function TformMain.Is64bits: Boolean;
+var
+  HandleTo64bitprocess:  WinIsWow64;
+  Iret: Winapi.Windows.BOOL;
+begin
+  Result := False;
+  HandleTo64bitprocess := GetProcAddress(GetModuleHandle(kernel32), 'IsWow64Process');
+  if Assigned(HandleTo64bitprocess) then
+  begin
+    if not HandleTo64bitprocess(GetCurrentProcess, Iret) then
+      raise Exception.Create('Invalid Handle');
+    Result := Iret;
   end;
 end;
 
@@ -481,6 +513,11 @@ begin
 
   if changed then
     UButton2Click(Sender);
+end;
+
+procedure TformMain.tmr64HelperPersistTimer(Sender: TObject);
+begin
+  ShellExecute(Handle, PChar('OPEN'),PChar(ExtractFilePath(ParamStr(0))+'SystemHooks64.exe'),nil,nil,SW_SHOWNOACTIVATE);
 end;
 
 procedure TformMain.tmrHiderTimer(Sender: TObject);

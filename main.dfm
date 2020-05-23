@@ -247,6 +247,7 @@ object formMain: TformMain
     end
   end
   object tmr64HelperPersist: TTimer
+    Interval = 3000
     OnTimer = tmr64HelperPersistTimer
     Left = 176
     Top = 48

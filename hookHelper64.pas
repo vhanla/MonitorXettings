@@ -41,7 +41,7 @@ procedure TForm1.CreateParams(var Params: TCreateParams);
 begin
   inherited;
 
-  Params.WinClassName := 'MonitoXettings64Hwnd';
+  Params.WinClassName := 'MonitorXettings64Hwnd';
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);

@@ -517,7 +517,8 @@ end;
 
 procedure TformMain.tmr64HelperPersistTimer(Sender: TObject);
 begin
-  ShellExecute(Handle, PChar('OPEN'),PChar(ExtractFilePath(ParamStr(0))+'SystemHooks64.exe'),nil,nil,SW_SHOWNOACTIVATE);
+  if FindWindow('MonitorXettings64Hwnd', nil) = 0 then
+    ShellExecute(Handle, PChar('OPEN'),PChar(ExtractFilePath(ParamStr(0))+'SystemHooks64.exe'),nil,nil,SW_SHOWNOACTIVATE);
 end;
 
 procedure TformMain.tmrHiderTimer(Sender: TObject);

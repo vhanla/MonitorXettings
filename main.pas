@@ -302,7 +302,7 @@ begin
 
   if Is64bits then
   begin
-    SendMessage(FindWindow('MonitorXettings64Hwnd', nil),WM_CLOSE,0,0);
+    SendMessageTimeout(FindWindow('MonitorXettings64Hwnd', nil),WM_CLOSE,0,0,SMTO_NORMAL or SMTO_ABORTIFHUNG,500,0);
   end;
 end;
 

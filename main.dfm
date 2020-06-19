@@ -6,8 +6,8 @@ object formMain: TformMain
   BorderIcons = []
   BorderStyle = bsSingle
   Caption = 'Monitor Adjuster'
-  ClientHeight = 142
-  ClientWidth = 355
+  ClientHeight = 262
+  ClientWidth = 361
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -22,90 +22,10 @@ object formMain: TformMain
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object USlider1: TUSlider
-    Left = 8
-    Top = 57
-    Width = 337
-    OnMouseUp = USlider1MouseUp
-    CustomBackColor.Enabled = False
-    CustomBackColor.LightNone = 10066329
-    CustomBackColor.LightHover = 6710886
-    CustomBackColor.LightPress = 10066329
-    CustomBackColor.LightSelectedNone = 10066329
-    CustomBackColor.LightSelectedHover = 6710886
-    CustomBackColor.LightSelectedPress = 10066329
-    CustomBackColor.DarkNone = 6710886
-    CustomBackColor.DarkHover = 10066329
-    CustomBackColor.DarkPress = 6710886
-    CustomBackColor.DarkSelectedNone = 6710886
-    CustomBackColor.DarkSelectedHover = 10066329
-    CustomBackColor.DarkSelectedPress = 6710886
-    CustomCursorColor.Enabled = False
-    CustomCursorColor.LightNone = 14120960
-    CustomCursorColor.LightHover = 1513239
-    CustomCursorColor.LightPress = 13421772
-    CustomCursorColor.LightSelectedNone = 14120960
-    CustomCursorColor.LightSelectedHover = 1513239
-    CustomCursorColor.LightSelectedPress = 13421772
-    CustomCursorColor.DarkNone = 14120960
-    CustomCursorColor.DarkHover = 15921906
-    CustomCursorColor.DarkPress = 7763574
-    CustomCursorColor.DarkSelectedNone = 14120960
-    CustomCursorColor.DarkSelectedHover = 15921906
-    CustomCursorColor.DarkSelectedPress = 7763574
-    OnChange = USlider1Change
-  end
-  object UText1: TUText
-    Left = 8
-    Top = 38
-    Width = 35
-    Height = 13
-    Caption = 'UText1'
-  end
-  object USlider2: TUSlider
-    Left = 8
-    Top = 107
-    Width = 328
-    OnMouseUp = USlider1MouseUp
-    CustomBackColor.Enabled = False
-    CustomBackColor.LightNone = 10066329
-    CustomBackColor.LightHover = 6710886
-    CustomBackColor.LightPress = 10066329
-    CustomBackColor.LightSelectedNone = 10066329
-    CustomBackColor.LightSelectedHover = 6710886
-    CustomBackColor.LightSelectedPress = 10066329
-    CustomBackColor.DarkNone = 6710886
-    CustomBackColor.DarkHover = 10066329
-    CustomBackColor.DarkPress = 6710886
-    CustomBackColor.DarkSelectedNone = 6710886
-    CustomBackColor.DarkSelectedHover = 10066329
-    CustomBackColor.DarkSelectedPress = 6710886
-    CustomCursorColor.Enabled = False
-    CustomCursorColor.LightNone = 14120960
-    CustomCursorColor.LightHover = 1513239
-    CustomCursorColor.LightPress = 13421772
-    CustomCursorColor.LightSelectedNone = 14120960
-    CustomCursorColor.LightSelectedHover = 1513239
-    CustomCursorColor.LightSelectedPress = 13421772
-    CustomCursorColor.DarkNone = 14120960
-    CustomCursorColor.DarkHover = 15921906
-    CustomCursorColor.DarkPress = 7763574
-    CustomCursorColor.DarkSelectedNone = 14120960
-    CustomCursorColor.DarkSelectedHover = 15921906
-    CustomCursorColor.DarkSelectedPress = 7763574
-    OnChange = USlider2Change
-  end
-  object UText2: TUText
-    Left = 8
-    Top = 88
-    Width = 35
-    Height = 13
-    Caption = 'UText1'
-  end
   object UCaptionBar1: TUCaptionBar
     Left = 0
     Top = 0
-    Width = 355
+    Width = 361
     Caption = '   Caption bar'
     Color = 15921906
     TabOrder = 0
@@ -114,8 +34,9 @@ object formMain: TformMain
     CustomBackColor.LightColor = 15921906
     CustomBackColor.DarkColor = 2829099
     DragToMove = False
+    ExplicitWidth = 355
     object UQuickButton1: TUQuickButton
-      Left = 310
+      Left = 316
       Top = 0
       Align = alRight
       Font.Charset = DEFAULT_CHARSET
@@ -133,8 +54,8 @@ object formMain: TformMain
     end
   end
   object UButton1: TUButton
-    Left = 304
-    Top = 200
+    Left = 243
+    Top = 255
     Caption = 'Apply'
     Visible = False
     OnClick = UButton1Click
@@ -166,8 +87,8 @@ object formMain: TformMain
     CustomBorderColor.DarkSelectedPress = 6710886
   end
   object UButton2: TUButton
-    Left = 16
-    Top = 200
+    Left = 8
+    Top = 255
     Caption = 'GetPhysicalMonitors'
     Visible = False
     OnClick = UButton2Click
@@ -198,6 +119,170 @@ object formMain: TformMain
     CustomBorderColor.DarkSelectedHover = 8750469
     CustomBorderColor.DarkSelectedPress = 6710886
   end
+  object UCaptionBar2: TUCaptionBar
+    Left = 0
+    Top = 169
+    Width = 361
+    Caption = '   Gamma (double click to reset, works only on single monitor)'
+    Color = 15921906
+    TabOrder = 3
+    OnDblClick = UCaptionBar2DblClick
+    CustomBackColor.Enabled = False
+    CustomBackColor.Color = 15921906
+    CustomBackColor.LightColor = 15921906
+    CustomBackColor.DarkColor = 2829099
+    ExplicitTop = 162
+    ExplicitWidth = 185
+  end
+  object UPanel1: TUPanel
+    Left = 0
+    Top = 32
+    Width = 361
+    Height = 137
+    Align = alTop
+    Color = 15132390
+    TabOrder = 4
+    CustomBackColor.Enabled = False
+    CustomBackColor.Color = 15132390
+    CustomBackColor.LightColor = 15132390
+    CustomBackColor.DarkColor = 2039583
+    ExplicitWidth = 522
+    object USlider1: TUSlider
+      Left = 8
+      Top = 33
+      Width = 337
+      OnMouseUp = USlider1MouseUp
+      CustomBackColor.Enabled = False
+      CustomBackColor.LightNone = 10066329
+      CustomBackColor.LightHover = 6710886
+      CustomBackColor.LightPress = 10066329
+      CustomBackColor.LightSelectedNone = 10066329
+      CustomBackColor.LightSelectedHover = 6710886
+      CustomBackColor.LightSelectedPress = 10066329
+      CustomBackColor.DarkNone = 6710886
+      CustomBackColor.DarkHover = 10066329
+      CustomBackColor.DarkPress = 6710886
+      CustomBackColor.DarkSelectedNone = 6710886
+      CustomBackColor.DarkSelectedHover = 10066329
+      CustomBackColor.DarkSelectedPress = 6710886
+      CustomCursorColor.Enabled = False
+      CustomCursorColor.LightNone = 14120960
+      CustomCursorColor.LightHover = 1513239
+      CustomCursorColor.LightPress = 13421772
+      CustomCursorColor.LightSelectedNone = 14120960
+      CustomCursorColor.LightSelectedHover = 1513239
+      CustomCursorColor.LightSelectedPress = 13421772
+      CustomCursorColor.DarkNone = 14120960
+      CustomCursorColor.DarkHover = 15921906
+      CustomCursorColor.DarkPress = 7763574
+      CustomCursorColor.DarkSelectedNone = 14120960
+      CustomCursorColor.DarkSelectedHover = 15921906
+      CustomCursorColor.DarkSelectedPress = 7763574
+      OnChange = USlider1Change
+    end
+    object USlider2: TUSlider
+      Left = 8
+      Top = 88
+      Width = 339
+      OnMouseUp = USlider1MouseUp
+      CustomBackColor.Enabled = False
+      CustomBackColor.LightNone = 10066329
+      CustomBackColor.LightHover = 6710886
+      CustomBackColor.LightPress = 10066329
+      CustomBackColor.LightSelectedNone = 10066329
+      CustomBackColor.LightSelectedHover = 6710886
+      CustomBackColor.LightSelectedPress = 10066329
+      CustomBackColor.DarkNone = 6710886
+      CustomBackColor.DarkHover = 10066329
+      CustomBackColor.DarkPress = 6710886
+      CustomBackColor.DarkSelectedNone = 6710886
+      CustomBackColor.DarkSelectedHover = 10066329
+      CustomBackColor.DarkSelectedPress = 6710886
+      CustomCursorColor.Enabled = False
+      CustomCursorColor.LightNone = 14120960
+      CustomCursorColor.LightHover = 1513239
+      CustomCursorColor.LightPress = 13421772
+      CustomCursorColor.LightSelectedNone = 14120960
+      CustomCursorColor.LightSelectedHover = 1513239
+      CustomCursorColor.LightSelectedPress = 13421772
+      CustomCursorColor.DarkNone = 14120960
+      CustomCursorColor.DarkHover = 15921906
+      CustomCursorColor.DarkPress = 7763574
+      CustomCursorColor.DarkSelectedNone = 14120960
+      CustomCursorColor.DarkSelectedHover = 15921906
+      CustomCursorColor.DarkSelectedPress = 7763574
+      OnChange = USlider2Change
+    end
+    object UText1: TUText
+      Left = 8
+      Top = 14
+      Width = 35
+      Height = 13
+      Caption = 'UText1'
+    end
+    object UText2: TUText
+      Left = 8
+      Top = 69
+      Width = 35
+      Height = 13
+      Caption = 'UText1'
+    end
+  end
+  object UPanel2: TUPanel
+    Left = 0
+    Top = 201
+    Width = 361
+    Height = 64
+    Align = alTop
+    Color = 15132390
+    TabOrder = 5
+    CustomBackColor.Enabled = False
+    CustomBackColor.Color = 15132390
+    CustomBackColor.LightColor = 15132390
+    CustomBackColor.DarkColor = 2039583
+    ExplicitWidth = 522
+    object USlider3: TUSlider
+      Left = 8
+      Top = 23
+      Width = 337
+      OnMouseUp = USlider3MouseUp
+      CustomBackColor.Enabled = False
+      CustomBackColor.LightNone = 10066329
+      CustomBackColor.LightHover = 6710886
+      CustomBackColor.LightPress = 10066329
+      CustomBackColor.LightSelectedNone = 10066329
+      CustomBackColor.LightSelectedHover = 6710886
+      CustomBackColor.LightSelectedPress = 10066329
+      CustomBackColor.DarkNone = 6710886
+      CustomBackColor.DarkHover = 10066329
+      CustomBackColor.DarkPress = 6710886
+      CustomBackColor.DarkSelectedNone = 6710886
+      CustomBackColor.DarkSelectedHover = 10066329
+      CustomBackColor.DarkSelectedPress = 6710886
+      CustomCursorColor.Enabled = False
+      CustomCursorColor.LightNone = 14120960
+      CustomCursorColor.LightHover = 1513239
+      CustomCursorColor.LightPress = 13421772
+      CustomCursorColor.LightSelectedNone = 14120960
+      CustomCursorColor.LightSelectedHover = 1513239
+      CustomCursorColor.LightSelectedPress = 13421772
+      CustomCursorColor.DarkNone = 14120960
+      CustomCursorColor.DarkHover = 15921906
+      CustomCursorColor.DarkPress = 7763574
+      CustomCursorColor.DarkSelectedNone = 14120960
+      CustomCursorColor.DarkSelectedHover = 15921906
+      CustomCursorColor.DarkSelectedPress = 7763574
+      Max = 255
+      Value = 128
+    end
+    object UText3: TUText
+      Left = 8
+      Top = 6
+      Width = 18
+      Height = 13
+      Caption = '128'
+    end
+  end
   object TrayIcon1: TTrayIcon
     PopupMenu = PopupMenu1
     Visible = True
@@ -206,8 +291,7 @@ object formMain: TformMain
     Top = 104
   end
   object PopupMenu1: TPopupMenu
-    Left = 256
-    Top = 40
+    Left = 344
     object Settings1: TMenuItem
       Caption = '&Settings'
       OnClick = Settings1Click
@@ -234,12 +318,10 @@ object formMain: TformMain
     Enabled = False
     Interval = 500
     OnTimer = tmrHiderTimer
-    Left = 376
-    Top = 56
+    Left = 424
   end
   object ActionList1: TActionList
-    Left = 112
-    Top = 40
+    Left = 152
     object actEscape: TAction
       Caption = 'actEscape'
       ShortCut = 27
@@ -249,7 +331,6 @@ object formMain: TformMain
   object tmr64HelperPersist: TTimer
     Interval = 3000
     OnTimer = tmr64HelperPersistTimer
-    Left = 176
-    Top = 48
+    Left = 256
   end
 end

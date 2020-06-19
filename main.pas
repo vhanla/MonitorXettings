@@ -7,7 +7,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus, UCL.Form,
   UCL.CaptionBar, UCL.Classes, UCL.Button, UCL.Slider, UCL.Text, ComObj, ActiveX,
   UCL.QuickButton, UCL.ThemeManager, ShellApi, settings, System.Actions,
-  Vcl.ActnList, Registry;
+  Vcl.ActnList, Registry, UCL.Panel;
 
 const
   WM_SHELLEVENT = WM_USER + 11;
@@ -17,6 +17,13 @@ type
   PHYSICAL_MONITOR = record
     hPhysicalMonitor: THandle;
     szPhysicalMonitorDescription: array[0..127] of Char;
+  end;
+
+  TMonitorSetting = record
+    Id: THandle;
+    Name: array [0..127] of Char;
+    Contrast: Integer;
+    Brightness: Integer;
   end;
 
   TUSlider = class (UCL.Slider.TUSlider)
@@ -55,6 +62,11 @@ type
     ActionList1: TActionList;
     actEscape: TAction;
     tmr64HelperPersist: TTimer;
+    UCaptionBar2: TUCaptionBar;
+    UPanel1: TUPanel;
+    UPanel2: TUPanel;
+    USlider3: TUSlider;
+    UText3: TUText;
     procedure FormCreate(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure USlider1Change(Sender: TObject);
@@ -73,6 +85,9 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure actEscapeExecute(Sender: TObject);
     procedure tmr64HelperPersistTimer(Sender: TObject);
+    procedure USlider3MouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure UCaptionBar2DblClick(Sender: TObject);
   protected
     { Protected declarations : known to all classes in the hierearchy}
     function GetMainTaskbarPosition:Integer;
@@ -86,6 +101,8 @@ type
     procedure WMHotkey(var Msg: TWMHotKey); message WM_HOTKEY;
     procedure ShellEvent(var Msg: TMessage); message WM_SHELLEVENT;
     function Is64bits: Boolean;
+
+    function SetDisplayGamma(AGammaValue: Byte): Boolean;
   public
     Settings: TSettings;
     { Public declarations : known externally by class users}
@@ -291,6 +308,9 @@ end;
 
 procedure TformMain.FormDestroy(Sender: TObject);
 begin
+  // restore default gamma value (128)
+  SetDisplayGamma(128);
+
   KillHook;
   Settings.Free;
 
@@ -385,6 +405,33 @@ begin
     reg.CloseKey;
   finally
     reg.Free;
+  end;
+end;
+
+function TformMain.SetDisplayGamma(AGammaValue: Byte): Boolean;
+var
+  GammaDC: HDC;
+  GammaArray: array[0..2, 0..255] of Word;
+  I, Value: Integer;
+begin
+  Result := False;
+  GammaDC := GetDC(0);
+
+  if GammaDC <> 0 then
+  begin
+    for I := 0 to 255 do
+    begin
+      Value := I * (AGammaValue + 128);
+      if Value > 65535 then
+        Value := 65535;
+      GammaArray[0, I] := Value; // R value of I is mapped to brightness of Value
+      GammaArray[1, I] := Value; // G value of I is mapped to brightness of Value
+      GammaArray[2, I] := Value; // B value of I is mapped to brightness of Value
+    end;
+    // Note: BOOL will be converted to Boolean here.
+    Result := SetDeviceGammaRamp(GammaDC, GammaArray);
+
+    ReleaseDC(0, GammaDC);
   end;
 end;
 
@@ -597,6 +644,13 @@ begin
 
 end;
 
+procedure TformMain.UCaptionBar2DblClick(Sender: TObject);
+begin
+  SetDisplayGamma(128);
+  USlider3.Value := 128;
+  UText3.Caption := '128';
+end;
+
 procedure TformMain.USlider1Change(Sender: TObject);
 begin
   UText1.Caption := 'Brightness: ' + USlider1.Value.ToString;
@@ -613,6 +667,13 @@ procedure TformMain.USlider2Change(Sender: TObject);
 begin
   UText2.Caption := 'Contrast: ' + USlider2.Value.ToString;
 //  fPrevContrast := USlider2.Value;
+end;
+
+procedure TformMain.USlider3MouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  SetDisplayGamma(USlider3.Value);
+  UText3.Caption := USlider3.Value.ToString;
 end;
 
 procedure TformMain.WMHotkey(var Msg: TWMHotKey);

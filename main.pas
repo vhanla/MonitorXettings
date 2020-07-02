@@ -342,6 +342,7 @@ var
   TaskbarRect: TRect;
 begin
   Result := ABNONE;
+  ABData.cbSize := SizeOf(TAppbarData);
   Res := SHAppBarMessage(ABM_GETTASKBARPOS, ABData);
   if BOOL(Res) then
   begin

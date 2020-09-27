@@ -4,10 +4,9 @@ object formMain: TformMain
   AlphaBlend = True
   AlphaBlendValue = 200
   BorderIcons = []
-  BorderStyle = bsSingle
   Caption = 'Monitor Adjuster'
-  ClientHeight = 262
-  ClientWidth = 361
+  ClientHeight = 256
+  ClientWidth = 359
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -22,22 +21,26 @@ object formMain: TformMain
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object UCaptionBar1: TUCaptionBar
+  object UCaptionBar1: TUWPCaption
     Left = 0
     Top = 0
-    Width = 361
+    Width = 359
     Caption = '   Caption bar'
-    Color = 15921906
+    Color = 14051691
     TabOrder = 0
     CustomBackColor.Enabled = False
     CustomBackColor.Color = 15921906
     CustomBackColor.LightColor = 15921906
     CustomBackColor.DarkColor = 2829099
     DragToMove = False
-    ExplicitWidth = 355
-    object UQuickButton1: TUQuickButton
-      Left = 316
+    object UQuickButton1: TUWPQuickButton
+      Left = 314
       Top = 0
+      CustomBackColor.Enabled = False
+      CustomBackColor.Color = clBlack
+      CustomBackColor.LightColor = 13619151
+      CustomBackColor.DarkColor = 3947580
+      Caption = #59761
       Align = alRight
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -45,20 +48,45 @@ object formMain: TformMain
       Font.Name = 'Segoe MDL2 Assets'
       Font.Style = []
       ParentFont = False
-      CustomBackColor.Enabled = False
-      CustomBackColor.Color = clBlack
-      CustomBackColor.LightColor = 13619151
-      CustomBackColor.DarkColor = 3947580
-      Caption = #59761
       ExplicitLeft = 352
     end
   end
-  object UButton1: TUButton
+  object UButton1: TUWPButton
     Left = 243
     Top = 255
+    CustomBackColor.Enabled = False
+    CustomBackColor.LightNone = 13421772
+    CustomBackColor.LightHover = 13421772
+    CustomBackColor.LightPress = 10066329
+    CustomBackColor.LightSelectedNone = 13421772
+    CustomBackColor.LightSelectedHover = 13421772
+    CustomBackColor.LightSelectedPress = 10066329
+    CustomBackColor.DarkNone = 3355443
+    CustomBackColor.DarkHover = 3355443
+    CustomBackColor.DarkPress = 6710886
+    CustomBackColor.DarkSelectedNone = 3355443
+    CustomBackColor.DarkSelectedHover = 3355443
+    CustomBackColor.DarkSelectedPress = 6710886
+    CustomBorderColor.Enabled = False
+    CustomBorderColor.LightNone = 13421772
+    CustomBorderColor.LightHover = 8026746
+    CustomBorderColor.LightPress = 10066329
+    CustomBorderColor.LightSelectedNone = 8026746
+    CustomBorderColor.LightSelectedHover = 8026746
+    CustomBorderColor.LightSelectedPress = 10066329
+    CustomBorderColor.DarkNone = 3355443
+    CustomBorderColor.DarkHover = 8750469
+    CustomBorderColor.DarkPress = 6710886
+    CustomBorderColor.DarkSelectedNone = 8750469
+    CustomBorderColor.DarkSelectedHover = 8750469
+    CustomBorderColor.DarkSelectedPress = 6710886
     Caption = 'Apply'
     Visible = False
     OnClick = UButton1Click
+  end
+  object UButton2: TUWPButton
+    Left = 8
+    Top = 255
     CustomBackColor.Enabled = False
     CustomBackColor.LightNone = 13421772
     CustomBackColor.LightHover = 13421772
@@ -85,59 +113,27 @@ object formMain: TformMain
     CustomBorderColor.DarkSelectedNone = 8750469
     CustomBorderColor.DarkSelectedHover = 8750469
     CustomBorderColor.DarkSelectedPress = 6710886
-  end
-  object UButton2: TUButton
-    Left = 8
-    Top = 255
     Caption = 'GetPhysicalMonitors'
     Visible = False
     OnClick = UButton2Click
-    CustomBackColor.Enabled = False
-    CustomBackColor.LightNone = 13421772
-    CustomBackColor.LightHover = 13421772
-    CustomBackColor.LightPress = 10066329
-    CustomBackColor.LightSelectedNone = 13421772
-    CustomBackColor.LightSelectedHover = 13421772
-    CustomBackColor.LightSelectedPress = 10066329
-    CustomBackColor.DarkNone = 3355443
-    CustomBackColor.DarkHover = 3355443
-    CustomBackColor.DarkPress = 6710886
-    CustomBackColor.DarkSelectedNone = 3355443
-    CustomBackColor.DarkSelectedHover = 3355443
-    CustomBackColor.DarkSelectedPress = 6710886
-    CustomBorderColor.Enabled = False
-    CustomBorderColor.LightNone = 13421772
-    CustomBorderColor.LightHover = 8026746
-    CustomBorderColor.LightPress = 10066329
-    CustomBorderColor.LightSelectedNone = 8026746
-    CustomBorderColor.LightSelectedHover = 8026746
-    CustomBorderColor.LightSelectedPress = 10066329
-    CustomBorderColor.DarkNone = 3355443
-    CustomBorderColor.DarkHover = 8750469
-    CustomBorderColor.DarkPress = 6710886
-    CustomBorderColor.DarkSelectedNone = 8750469
-    CustomBorderColor.DarkSelectedHover = 8750469
-    CustomBorderColor.DarkSelectedPress = 6710886
   end
-  object UCaptionBar2: TUCaptionBar
+  object UCaptionBar2: TUWPCaption
     Left = 0
     Top = 169
-    Width = 361
+    Width = 359
     Caption = '   Gamma (double click to reset, works only on single monitor)'
-    Color = 15921906
+    Color = 14051691
     TabOrder = 3
     OnDblClick = UCaptionBar2DblClick
     CustomBackColor.Enabled = False
     CustomBackColor.Color = 15921906
     CustomBackColor.LightColor = 15921906
     CustomBackColor.DarkColor = 2829099
-    ExplicitTop = 162
-    ExplicitWidth = 185
   end
-  object UPanel1: TUPanel
+  object UPanel1: TUWPPanel
     Left = 0
     Top = 32
-    Width = 361
+    Width = 359
     Height = 137
     Align = alTop
     Color = 15132390
@@ -146,12 +142,24 @@ object formMain: TformMain
     CustomBackColor.Color = 15132390
     CustomBackColor.LightColor = 15132390
     CustomBackColor.DarkColor = 2039583
-    ExplicitWidth = 522
-    object USlider1: TUSlider
+    object UText1: TUWPLabel
+      Left = 8
+      Top = 14
+      Width = 35
+      Height = 13
+      Caption = 'UText1'
+    end
+    object UText2: TUWPLabel
+      Left = 8
+      Top = 69
+      Width = 35
+      Height = 13
+      Caption = 'UText1'
+    end
+    object USlider1: TUWPSlider
       Left = 8
       Top = 33
       Width = 337
-      OnMouseUp = USlider1MouseUp
       CustomBackColor.Enabled = False
       CustomBackColor.LightNone = 10066329
       CustomBackColor.LightHover = 6710886
@@ -179,12 +187,13 @@ object formMain: TformMain
       CustomCursorColor.DarkSelectedHover = 15921906
       CustomCursorColor.DarkSelectedPress = 7763574
       OnChange = USlider1Change
+      TabOrder = 0
+      OnMouseUp = USlider1MouseUp
     end
-    object USlider2: TUSlider
+    object USlider2: TUWPSlider
       Left = 8
       Top = 88
       Width = 339
-      OnMouseUp = USlider1MouseUp
       CustomBackColor.Enabled = False
       CustomBackColor.LightNone = 10066329
       CustomBackColor.LightHover = 6710886
@@ -212,26 +221,14 @@ object formMain: TformMain
       CustomCursorColor.DarkSelectedHover = 15921906
       CustomCursorColor.DarkSelectedPress = 7763574
       OnChange = USlider2Change
-    end
-    object UText1: TUText
-      Left = 8
-      Top = 14
-      Width = 35
-      Height = 13
-      Caption = 'UText1'
-    end
-    object UText2: TUText
-      Left = 8
-      Top = 69
-      Width = 35
-      Height = 13
-      Caption = 'UText1'
+      TabOrder = 1
+      OnMouseUp = USlider1MouseUp
     end
   end
-  object UPanel2: TUPanel
+  object UPanel2: TUWPPanel
     Left = 0
     Top = 201
-    Width = 361
+    Width = 359
     Height = 64
     Align = alTop
     Color = 15132390
@@ -240,12 +237,17 @@ object formMain: TformMain
     CustomBackColor.Color = 15132390
     CustomBackColor.LightColor = 15132390
     CustomBackColor.DarkColor = 2039583
-    ExplicitWidth = 522
-    object USlider3: TUSlider
+    object UText3: TUWPLabel
+      Left = 8
+      Top = 6
+      Width = 18
+      Height = 13
+      Caption = '128'
+    end
+    object USlider3: TUWPSlider
       Left = 8
       Top = 23
       Width = 337
-      OnMouseUp = USlider3MouseUp
       CustomBackColor.Enabled = False
       CustomBackColor.LightNone = 10066329
       CustomBackColor.LightHover = 6710886
@@ -274,13 +276,10 @@ object formMain: TformMain
       CustomCursorColor.DarkSelectedPress = 7763574
       Max = 255
       Value = 128
-    end
-    object UText3: TUText
-      Left = 8
-      Top = 6
-      Width = 18
-      Height = 13
-      Caption = '128'
+      OnChange = USlider3Change
+      TabOrder = 0
+      OnMouseWheel = USlider3MouseWheel
+      OnMouseUp = USlider3MouseUp
     end
   end
   object TrayIcon1: TTrayIcon

@@ -4,10 +4,10 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus, UCL.Form,
-  UCL.CaptionBar, UCL.Classes, UCL.Button, UCL.Slider, UCL.Text, ComObj, ActiveX,
-  UCL.QuickButton, UCL.ThemeManager, ShellApi, settings, System.Actions,
-  Vcl.ActnList, Registry, UCL.Panel;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus, UWP.Form,
+  UWP.Caption, UWP.Classes, UWP.Button, UWP.Slider, UWP.Text, ComObj, ActiveX,
+  UWP.QuickButton, UWP.ColorManager, ShellApi, settings, System.Actions,
+  Vcl.ActnList, Registry, UWP.Panel, NVAPI;
 
 const
   WM_SHELLEVENT = WM_USER + 11;
@@ -26,47 +26,47 @@ type
     Brightness: Integer;
   end;
 
-  TUSlider = class (UCL.Slider.TUSlider)
-  private
-  //https://stackoverflow.com/questions/456488/how-to-add-mouse-wheel-support-to-a-component-descended-from-tgraphiccontrol/34463279#34463279
-    fPrevFocus: HWND;
-    procedure CMMouseEnter(var Message: TMessage); message CM_MOUSEENTER;
-    procedure WMMouseMove(var Message: TWMMouseMove); message WM_MOUSEMOVE;
-  public
-    function DoMouseWheelDown(Shift: TShiftState; MousePos: TPoint): Boolean; override;
-    function DoMouseWheelUp(Shift: TShiftState; MousePos: TPoint): Boolean; override;
-    procedure MouseWheelHandler(var Message: TMessage); override;
-  published
-    property OnMouseWheel;
-    property OnMouseWheelDown;
-    property OnMouseWheelUp;
-  end;
+//  TUSlider = class (UCL.Slider.TUSlider)
+//  private
+//  //https://stackoverflow.com/questions/456488/how-to-add-mouse-wheel-support-to-a-component-descended-from-tgraphiccontrol/34463279#34463279
+//    fPrevFocus: HWND;
+//    procedure CMMouseEnter(var Message: TMessage); message CM_MOUSEENTER;
+//    procedure WMMouseMove(var Message: TWMMouseMove); message WM_MOUSEMOVE;
+//  public
+//    function DoMouseWheelDown(Shift: TShiftState; MousePos: TPoint): Boolean; override;
+//    function DoMouseWheelUp(Shift: TShiftState; MousePos: TPoint): Boolean; override;
+//    procedure MouseWheelHandler(var Message: TMessage); override;
+//  published
+//    property OnMouseWheel;
+//    property OnMouseWheelDown;
+//    property OnMouseWheelUp;
+//  end;
 
-  TformMain = class(TUForm)
+  TformMain = class(TUWPForm)
     TrayIcon1: TTrayIcon;
     PopupMenu1: TPopupMenu;
     Exit1: TMenuItem;
     Settings1: TMenuItem;
     N1: TMenuItem;
     About1: TMenuItem;
-    UCaptionBar1: TUCaptionBar;
+    UCaptionBar1: TUWPCaption;
     Timer1: TTimer;
-    USlider1: TUSlider;
-    UButton1: TUButton;
-    UText1: TUText;
-    UQuickButton1: TUQuickButton;
-    UButton2: TUButton;
-    USlider2: TUSlider;
-    UText2: TUText;
+    USlider1: TUWPSlider;
+    UButton1: TUWPButton;
+    UText1: TUWPLabel;
+    UQuickButton1: TUWPQuickButton;
+    UButton2: TUWPButton;
+    USlider2: TUWPSlider;
+    UText2: TUWPLabel;
     tmrHider: TTimer;
     ActionList1: TActionList;
     actEscape: TAction;
     tmr64HelperPersist: TTimer;
-    UCaptionBar2: TUCaptionBar;
-    UPanel1: TUPanel;
-    UPanel2: TUPanel;
-    USlider3: TUSlider;
-    UText3: TUText;
+    UCaptionBar2: TUWPCaption;
+    UPanel1: TUWPPanel;
+    UPanel2: TUWPPanel;
+    USlider3: TUWPSlider;
+    UText3: TUWPLabel;
     procedure FormCreate(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure USlider1Change(Sender: TObject);
@@ -88,6 +88,9 @@ type
     procedure USlider3MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure UCaptionBar2DblClick(Sender: TObject);
+    procedure USlider3MouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure USlider3Change(Sender: TObject);
   protected
     { Protected declarations : known to all classes in the hierearchy}
     function GetMainTaskbarPosition:Integer;
@@ -249,7 +252,7 @@ begin
   Settings := TSettingsHandler.LoadSettings;
   SetHotKey(Sender, TextToShortCut(Settings.HotKey));
 
-  ThemeManager.ThemeType := ttDark;
+  ColorizationManager.ColorizationType := ctDark;
   UCaptionBar1.Caption := '   ' + Caption;
   monitor := Screen.MonitorFromWindow(Handle);
   if GetNumberOfPhysicalMonitorsFromHMONITOR(monitor.Handle, @num) then
@@ -462,7 +465,7 @@ begin
   end
   else
   begin
-    if Sender is TUButton then
+    if Sender is TUWPButton then
     begin
       MessageDlg(ShortCutToText(AHotKey) + ' successfully registered.', mtInformation, [mbOK], 0);
       Settings.HotKey := ShortCutToText(AHotKey);
@@ -478,7 +481,7 @@ end;
 
 procedure TformMain.ShellEvent(var Msg: TMessage);
 var
-  title: array[0..255] of char;
+  title: string;
   titleLen: Integer;
   LHWindow: HWND;
 begin
@@ -488,7 +491,9 @@ begin
     titleLen := GetWindowTextLength(LHWindow);
     if titleLen > 0 then
     begin
-      GetWindowText(LHWindow, title, titleLen + 1);
+      SetLength(title, titlelen);
+      GetWindowText(LHWindow, PChar(title), titleLen + 1);
+      title := PChar(title);
       UCaptionBar1.Caption := title;
       TrayIcon1.Hint := title;
     end;
@@ -670,8 +675,21 @@ begin
 //  fPrevContrast := USlider2.Value;
 end;
 
+procedure TformMain.USlider3Change(Sender: TObject);
+begin
+  SetDisplayGamma(USlider3.Value);
+  UText3.Caption := USlider3.Value.ToString;
+end;
+
 procedure TformMain.USlider3MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
+begin
+  SetDisplayGamma(USlider3.Value);
+  UText3.Caption := USlider3.Value.ToString;
+end;
+
+procedure TformMain.USlider3MouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
 begin
   SetDisplayGamma(USlider3.Value);
   UText3.Caption := USlider3.Value.ToString;
@@ -700,44 +718,44 @@ end;
 
 { TUSlider }
 
-procedure TUSlider.CMMouseEnter(var Message: TMessage);
-begin
-  fPrevFocus := SetFocus(Parent.Handle);
-  MouseCapture := True;
-  inherited;
-end;
-
-function TUSlider.DoMouseWheelDown(Shift: TShiftState;
-  MousePos: TPoint): Boolean;
-begin
-  if Self.Value > Self.Min then
-  begin
-    Self.Value := Self.Value - 1;
-    //trigger changeevent
-  end;
-end;
-
-function TUSlider.DoMouseWheelUp(Shift: TShiftState; MousePos: TPoint): Boolean;
-begin
-  if Self.Value < Self.Max then
-    Self.Value := Self.Value + 1;
-end;
-
-procedure TUSlider.MouseWheelHandler(var Message: TMessage);
-begin
-  Message.Result := Perform(CM_MOUSEWHEEL, Message.WParam, Message.LParam);
-  if Message.Result = 0 then
-    inherited MouseWheelHandler(Message);
-end;
-
-procedure TUSlider.WMMouseMove(var Message: TWMMouseMove);
-begin
-  if MouseCapture and not PtInRect(ClientRect, SmallPointToPoint(Message.Pos)) then
-  begin
-    MouseCapture := False;
-    SetFocus(fPrevFocus);
-  end;
-  inherited;
-end;
+//procedure TUSlider.CMMouseEnter(var Message: TMessage);
+//begin
+//  fPrevFocus := SetFocus(Parent.Handle);
+//  MouseCapture := True;
+//  inherited;
+//end;
+//
+//function TUSlider.DoMouseWheelDown(Shift: TShiftState;
+//  MousePos: TPoint): Boolean;
+//begin
+//  if Self.Value > Self.Min then
+//  begin
+//    Self.Value := Self.Value - 1;
+//    //trigger changeevent
+//  end;
+//end;
+//
+//function TUSlider.DoMouseWheelUp(Shift: TShiftState; MousePos: TPoint): Boolean;
+//begin
+//  if Self.Value < Self.Max then
+//    Self.Value := Self.Value + 1;
+//end;
+//
+//procedure TUSlider.MouseWheelHandler(var Message: TMessage);
+//begin
+//  Message.Result := Perform(CM_MOUSEWHEEL, Message.WParam, Message.LParam);
+//  if Message.Result = 0 then
+//    inherited MouseWheelHandler(Message);
+//end;
+//
+//procedure TUSlider.WMMouseMove(var Message: TWMMouseMove);
+//begin
+//  if MouseCapture and not PtInRect(ClientRect, SmallPointToPoint(Message.Pos)) then
+//  begin
+//    MouseCapture := False;
+//    SetFocus(fPrevFocus);
+//  end;
+//  inherited;
+//end;
 
 end.

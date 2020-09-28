@@ -11,6 +11,7 @@ uses
 
 const
   WM_SHELLEVENT = WM_USER + 11;
+  WM_RESIZEEVENT = WM_USER + 12;
 
 type
   WinIsWow64 = function(aHandle: THandle; var Iret: BOOL): Winapi.Windows.BOOL; stdcall;
@@ -103,7 +104,9 @@ type
 
     procedure WMHotkey(var Msg: TWMHotKey); message WM_HOTKEY;
     procedure ShellEvent(var Msg: TMessage); message WM_SHELLEVENT;
+    procedure ResizeEvent(var Msg: TMessage); message WM_RESIZEEVENT;
     function Is64bits: Boolean;
+    procedure RunWinEvent;
 
     function SetDisplayGamma(AGammaValue: Byte): Boolean;
   public
@@ -116,6 +119,8 @@ type
 
 var
   formMain: TformMain;
+  prevRect: TRect;
+  hook: NativeUInt;
 
 function GetMonitorBrightness (
   hMonitor: THandle; var pdwMinimumBrightness : DWORD;
@@ -154,7 +159,7 @@ function KillHook: BOOL; stdcall;
 implementation
 
 {$R *.dfm}
-uses frmSettings;
+uses frmSettings, utils;
 
 procedure SetBrightness(Timeout: Integer; Brightness: Byte);
 var
@@ -246,6 +251,9 @@ var
   min, max, cur: Cardinal;
 //  value: MINIMIZEDMETRICS;
 begin
+//  FluentEnabled := True;
+  AlphaBlend := True;
+  Color := clBlack;
 //  value.cbSize := SizeOf(MINIMIZEDMETRICS);
 //  value.iArrange := ARW_HIDE;
 //  SystemParametersInfo(SPI_SETMINIMIZEDMETRICS, SizeOf(value), @value, SPIF_UPDATEINIFILE or SPIF_SENDCHANGE);
@@ -291,7 +299,12 @@ begin
     tmr64HelperPersist.Enabled := True;
   end
   else
+  begin
     tmr64HelperPersist.Enabled := False;
+    // hook winevent here since it requires to be a process similar to OS
+    // otherwise it won't work
+    RunWinEvent;
+  end;
 end;
 
 procedure TformMain.FormDeactivate(Sender: TObject);
@@ -313,6 +326,12 @@ procedure TformMain.FormDestroy(Sender: TObject);
 begin
   // restore default gamma value (128)
   SetDisplayGamma(128);
+
+  if Is64bits then
+  begin
+    UnhookWinEvent(hook);
+    CoUninitialize;
+  end;
 
   KillHook;
   Settings.Free;
@@ -391,6 +410,56 @@ begin
       raise Exception.Create('Invalid Handle');
     Result := Iret;
   end;
+end;
+
+procedure TformMain.ResizeEvent(var Msg: TMessage);
+var
+  LHWindow: HWND;
+begin
+  LHWindow := GetForegroundWindow;
+  if LHWindow <> 0 then
+  begin
+    if DetectFullScreenApp(LHWindow) then
+    begin
+      USlider3.Value := 220;
+    end
+    else
+      USlider3.Value := 100;
+  end;
+end;
+
+procedure WinEventProc(hWinEventHook: NativeUInt; dwEvent: DWORD; handle: HWND;
+  idObject, idChild: LONG; dwEventThread, dwmsEventTime: DWORD);
+var
+  LHWindow: HWND;
+  LHFullScreen: BOOL;
+  vRect: TRect;
+  ParentHandle: HWND;
+begin
+  if dwEvent = EVENT_OBJECT_LOCATIONCHANGE then
+  begin
+    if GetForegroundWindow <> 0 then
+    begin
+      GetWindowRect(GetForegroundWindow, vRect);
+      if prevRect <> vRect
+      then
+      begin
+        prevRect := vRect;
+        ParentHandle := FindWindow('MonitorXettingsHwnd', nil);
+        if ParentHandle <> 0 then
+            SendMessageTimeout(ParentHandle, WM_RESIZEEVENT, wParam(0), lParam(0), SMTO_ABORTIFHUNG or SMTO_NORMAL, 500, nil);
+      end;
+    end;
+
+  end;
+end;
+
+procedure TformMain.RunWinEvent;
+begin
+  CoInitialize(nil);
+  hook := SetWinEventHook(EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_LOCATIONCHANGE, 0, @WinEventProc, 0, 0, WINEVENT_OUTOFCONTEXT or WINEVENT_SKIPOWNPROCESS );
+  if hook = 0 then
+    raise Exception.Create('Couldn''t create event hook');
 end;
 
 procedure TformMain.SetAutoStart(RunWithWindows: Boolean);
@@ -496,6 +565,16 @@ begin
       title := PChar(title);
       UCaptionBar1.Caption := title;
       TrayIcon1.Hint := title;
+      //detect fullscreen
+      //if not IsDirectXAppRunningFullScreen then
+      begin
+        if DetectFullScreenApp(LHWindow) then
+        begin
+          USlider3.Value := 220;
+        end
+        else
+          USlider3.Value := 100;
+      end;
     end;
 
   end;

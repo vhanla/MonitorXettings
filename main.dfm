@@ -1,7 +1,6 @@
 object formMain: TformMain
   Left = 0
   Top = 0
-  AlphaBlend = True
   AlphaBlendValue = 200
   BorderIcons = []
   Caption = 'Monitor Adjuster'

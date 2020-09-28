@@ -10,7 +10,9 @@ uses
   main in 'main.pas' {formMain},
   frmSettings in 'frmSettings.pas' {formSettings},
   taskbar in 'taskbar.pas',
-  settings in 'settings.pas';
+  settings in 'settings.pas',
+  monitorHandler in 'monitorHandler.pas',
+  utils in 'utils.pas';
 
 {$R *.res}
 

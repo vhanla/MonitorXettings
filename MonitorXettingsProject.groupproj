@@ -57,4 +57,44 @@
         <CallTarget Targets="MonitorXettings:Make;SystemHooks:Make;SystemHooks64:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+    <ItemGroup Condition="'$(BuildGroup)'=='BuildRelease'">
+        <BuildGroupProject Include="SystemHooks64.dproj">
+            <ProjectGuid>{7A92D865-4CBE-4151-B37B-DBA79F5C73EC}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="SystemHooks.dproj">
+            <ProjectGuid>{F0535828-CF9D-4108-8460-E34BC69D3D2B}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="MonitorXettings.dproj">
+            <ProjectGuid>{65769B2F-E6F9-4044-B73A-C8127A88AC33}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
+    <ItemGroup Condition="'$(BuildGroup)'=='BuildDebug'">
+        <BuildGroupProject Include="SystemHooks64.dproj">
+            <ProjectGuid>{7A92D865-4CBE-4151-B37B-DBA79F5C73EC}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="SystemHooks.dproj">
+            <ProjectGuid>{F0535828-CF9D-4108-8460-E34BC69D3D2B}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="MonitorXettings.dproj">
+            <ProjectGuid>{65769B2F-E6F9-4044-B73A-C8127A88AC33}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
 </Project>

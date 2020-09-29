@@ -68,6 +68,7 @@ type
     UPanel2: TUWPPanel;
     USlider3: TUWPSlider;
     UText3: TUWPLabel;
+    DarkerOverlay1: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure USlider1Change(Sender: TObject);
@@ -92,6 +93,8 @@ type
     procedure USlider3MouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure USlider3Change(Sender: TObject);
+    procedure DarkerOverlay1Click(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
   protected
     { Protected declarations : known to all classes in the hierearchy}
     function GetMainTaskbarPosition:Integer;
@@ -122,36 +125,6 @@ var
   prevRect: TRect;
   hook: NativeUInt;
 
-function GetMonitorBrightness (
-  hMonitor: THandle; var pdwMinimumBrightness : DWORD;
-  var pdwCurrentBrightness : DWORD; var pdwMaximumBrightness : DWORD): BOOL; stdcall;
-  external 'Dxva2.dll' name 'GetMonitorBrightness';
-
-function SetMonitorBrightness (
-  hMonitor: THandle; dwNewBrightness: DWORD): BOOL; stdcall;
-  external 'Dxva2.dll' name 'SetMonitorBrightness';
-
-function GetMonitorContrast (
-  hMonitor: THandle; var pdwMinimumBrightness : DWORD;
-  var pdwCurrentBrightness : DWORD; var pdwMaximumBrightness : DWORD): BOOL; stdcall;
-  external 'Dxva2.dll' name 'GetMonitorContrast';
-
-function SetMonitorContrast (
-  hMonitor: THandle; dwNewBrightness: DWORD): BOOL; stdcall;
-  external 'Dxva2.dll' name 'SetMonitorContrast';
-
-function GetNumberOfPhysicalMonitorsFromHMONITOR(hMonitor: THandle;
-  pdwNumberOfPhysicalMonitors: PDWORD): Boolean; stdcall;
-  external 'Dxva2.dll' name 'GetNumberOfPhysicalMonitorsFromHMONITOR';
-
-function GetPhysicalMonitorsFromHMONITOR(hMonitor: THandle;
-  dwPhysicalMonitorArraySizwe: DWORD; pPhysicalMonitorArray: Pointer): Boolean; stdcall;
-  external 'Dxva2.dll' name 'GetPhysicalMonitorsFromHMONITOR';
-
-function DestroyPhysicalMonitors(dwPhysicalMonitorArraySize: DWORD;
-  pPhysicalMonitorArray: Pointer): Boolean; stdcall;
-  external 'Dxva2.dll' name 'DestroyPhysicalMonitors';
-
 function RunHook(aHandle: HWND): BOOL; stdcall;
   external 'SystemHooks.dll' name 'RunHook';
 function KillHook: BOOL; stdcall;
@@ -159,7 +132,7 @@ function KillHook: BOOL; stdcall;
 implementation
 
 {$R *.dfm}
-uses frmSettings, utils;
+uses frmSettings, utils, monitorHandler, frmDarkOverlay;
 
 procedure SetBrightness(Timeout: Integer; Brightness: Byte);
 var
@@ -237,9 +210,28 @@ begin
   Params.WinClassName := 'MonitorXettingsHwnd';
 end;
 
+procedure TformMain.DarkerOverlay1Click(Sender: TObject);
+begin
+  DarkerOverlay1.Checked := not DarkerOverlay1.Checked;
+  if DarkerOverlay1.Checked then
+  begin
+    formDarker.Show;
+  end
+  else
+  begin
+    formDarker.Hide;
+  end;
+end;
+
 procedure TformMain.Exit1Click(Sender: TObject);
 begin
   Close;
+end;
+
+procedure TformMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+  DarkerOverlay1.Checked := False;
+  formDarker.Hide;
 end;
 
 procedure TformMain.FormCreate(Sender: TObject);
@@ -334,7 +326,11 @@ begin
   end;
 
   KillHook;
-  Settings.Free;
+  try
+    Settings.Free;
+  except
+
+  end;
 
   if GlobalFindAtom('MXHOTKEY') <> 0 then
   begin
@@ -417,14 +413,23 @@ var
   LHWindow: HWND;
 begin
   LHWindow := GetForegroundWindow;
-  if LHWindow <> 0 then
+  if (LHWindow <> 0) and (LHWindow <> formDarker.Handle) then
   begin
     if DetectFullScreenApp(LHWindow) then
     begin
       USlider3.Value := 220;
+      if DarkerOverlay1.Checked then
+        formDarker.Hide;
     end
     else
+    begin
       USlider3.Value := 100;
+      if DarkerOverlay1.Checked then
+      begin
+        formDarker.Show;
+        SendMessageTimeout(formDarker.Handle, WM_RESIZEEVENT, wParam(0), lParam(0), SMTO_ABORTIFHUNG or SMTO_NORMAL, 500, nil);
+      end;
+    end;
   end;
 end;
 
@@ -436,7 +441,8 @@ var
   vRect: TRect;
   ParentHandle: HWND;
 begin
-  if dwEvent = EVENT_OBJECT_LOCATIONCHANGE then
+  if (dwEvent = EVENT_OBJECT_LOCATIONCHANGE)
+  or (dwEvent = EVENT_SYSTEM_FOREGROUND) then
   begin
     if GetForegroundWindow <> 0 then
     begin
@@ -450,14 +456,13 @@ begin
             SendMessageTimeout(ParentHandle, WM_RESIZEEVENT, wParam(0), lParam(0), SMTO_ABORTIFHUNG or SMTO_NORMAL, 500, nil);
       end;
     end;
-
   end;
 end;
 
 procedure TformMain.RunWinEvent;
 begin
   CoInitialize(nil);
-  hook := SetWinEventHook(EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_LOCATIONCHANGE, 0, @WinEventProc, 0, 0, WINEVENT_OUTOFCONTEXT or WINEVENT_SKIPOWNPROCESS );
+  hook := SetWinEventHook(EVENT_MIN, EVENT_MAX, 0, @WinEventProc, 0, 0, WINEVENT_OUTOFCONTEXT or WINEVENT_SKIPOWNPROCESS );
   if hook = 0 then
     raise Exception.Create('Couldn''t create event hook');
 end;

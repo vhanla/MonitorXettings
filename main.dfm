@@ -14,6 +14,7 @@ object formMain: TformMain
   Font.Style = []
   FormStyle = fsStayOnTop
   OldCreateOrder = False
+  OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnDeactivate = FormDeactivate
@@ -293,6 +294,10 @@ object formMain: TformMain
     object Settings1: TMenuItem
       Caption = '&Settings'
       OnClick = Settings1Click
+    end
+    object DarkerOverlay1: TMenuItem
+      Caption = '&Darker Overlay'
+      OnClick = DarkerOverlay1Click
     end
     object About1: TMenuItem
       Caption = '&About'

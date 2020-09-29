@@ -49,7 +49,8 @@ var
   ParentHandle: HWND;
 begin
   //if dwEvent = EVENT_SYSTEM_MOVESIZEEND then
-  if dwEvent = EVENT_OBJECT_LOCATIONCHANGE then
+  if (dwEvent = EVENT_OBJECT_LOCATIONCHANGE)
+  or (dwEvent = EVENT_SYSTEM_FOREGROUND) then
   begin
     if GetForegroundWindow <> 0 then
     begin
@@ -85,7 +86,7 @@ begin
     Application.Terminate;
   end;
   CoInitialize(nil);
-  hook := SetWinEventHook(EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_LOCATIONCHANGE, 0, @WinEventProc, 0, 0, WINEVENT_OUTOFCONTEXT or WINEVENT_SKIPOWNPROCESS );
+  hook := SetWinEventHook(EVENT_MIN, EVENT_MAX, 0, @WinEventProc, 0, 0, WINEVENT_OUTOFCONTEXT or WINEVENT_SKIPOWNPROCESS );
   if hook = 0 then
     raise Exception.Create('Couldn''t create event hook');
   RunHook(Handle);

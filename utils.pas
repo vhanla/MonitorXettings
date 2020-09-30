@@ -9,6 +9,7 @@ uses
 function IsDirectXAppRunningFullScreen: Boolean;
 function DetectFullScreen3D: Boolean;
 function DetectFullScreenApp(AHandle: HWND = 0): Boolean;
+function IsDesktopWindow(AHandle: HWND): Boolean;
 
 implementation
 
@@ -70,7 +71,7 @@ begin
     Exit;
 
   if not IsWindow(curwnd) then Exit;
-  if curwnd = GetShellWindow then Exit;
+  if IsDesktopWindow(curwnd) then Exit;
 
   Mon := Screen.MonitorFromWindow(curwnd);
   GetWindowRect(curwnd, R);
@@ -95,6 +96,32 @@ begin
       if (Mon.BoundsRect.Width = R.Width) and (Mon.BoundsRect.Height = R.Height) then
         Result := True;
    // end;
+    end;
+  end;
+end;
+
+// detect desktop is present
+// those are different on specific conditions, like slideshow, win10 special features, and maybe third party tools installed for desktop handling
+function IsDesktopWindow(AHandle: HWND): Boolean;
+var
+  AppClassName: array[0..255] of char;
+  ChildHwnd: HWND;
+begin
+  Result := False;
+  if AHandle = GetDesktopWindow then Result := True
+  else if AHandle = GetShellWindow then Result := True
+  else
+  begin
+    GetClassName(AHandle, AppClassName, 255);
+    if AppClassName = 'WorkerW' then
+    begin
+      // it should have a children with 'SHELLDLL_DefView' present
+      ChildHwnd := FindWindowEx(AHandle, 0, 'SHELLDLL_DefView', nil);
+      if ChildHwnd <> 0 then
+      begin
+        //if DetectFullScreenApp(AHandle) then
+        Result := True;
+      end;
     end;
   end;
 end;

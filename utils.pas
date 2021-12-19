@@ -74,28 +74,32 @@ begin
   if IsDesktopWindow(curwnd) then Exit;
 
   Mon := Screen.MonitorFromWindow(curwnd);
-  GetWindowRect(curwnd, R);
-  GetWindowPlacement(curwnd, wndPlm);
-  if (wndPlm.showCmd and SW_SHOWMAXIMIZED) = SW_SHOWMAXIMIZED then
+{ TODO : This workaround kind of fixes, but it blocks on fast fullscreen apps detection leaving them as if it were full app, }
+//  if Assigned(Mon) then //o fix Mon.BoundsRect EAccessViolation ... added Assigned(Mon) to following 2 comparisons
   begin
-    if (Mon.BoundsRect.Width = R.Width) and (Mon.BoundsRect.Height = R.Height) then
-      Result := True;
-  end
-  else
-  begin
-    // some applications do not set SW_SHOWMAXIMIZED flag e.g. MPC-HC media player
-    // ignore maximized when workarearect is similar (i.e. taskbar is on top, might not be the same on secondary monitor)
-//    if IsTaskbarAlwaysOnTop then
-//    begin
-//      if (Screen.MonitorCount > 1) and (Mon.Handle =
-//    if ((Screen.MonitorCount > 1) and (FindWindow('Shell_SecondaryTrayWnd', nil)<>0) and (Mon.WorkareaRect <> Mon.BoundsRect))
-//    // if there is another monitor without taskbar then
-//    or ((Screen.MonitorCount > 1) and (FindWindow('Shell_SecondaryTrayWnd', nil)=0) and (Mon.WorkareaRect = Mon.BoundsRect))
-//    then
+    GetWindowRect(curwnd, R);
+    GetWindowPlacement(curwnd, wndPlm);
+    if (wndPlm.showCmd and SW_SHOWMAXIMIZED) = SW_SHOWMAXIMIZED then
     begin
-      if (Mon.BoundsRect.Width = R.Width) and (Mon.BoundsRect.Height = R.Height) then
+      if Assigned(Mon) and (Mon.BoundsRect.Width = R.Width) and (Mon.BoundsRect.Height = R.Height) then
         Result := True;
-   // end;
+    end
+    else
+    begin
+      // some applications do not set SW_SHOWMAXIMIZED flag e.g. MPC-HC media player
+      // ignore maximized when workarearect is similar (i.e. taskbar is on top, might not be the same on secondary monitor)
+  //    if IsTaskbarAlwaysOnTop then
+  //    begin
+  //      if (Screen.MonitorCount > 1) and (Mon.Handle =
+  //    if ((Screen.MonitorCount > 1) and (FindWindow('Shell_SecondaryTrayWnd', nil)<>0) and (Mon.WorkareaRect <> Mon.BoundsRect))
+  //    // if there is another monitor without taskbar then
+  //    or ((Screen.MonitorCount > 1) and (FindWindow('Shell_SecondaryTrayWnd', nil)=0) and (Mon.WorkareaRect = Mon.BoundsRect))
+  //    then
+      begin
+        if Assigned(Mon) and (Mon.BoundsRect.Width = R.Width) and (Mon.BoundsRect.Height = R.Height) then
+          Result := True;
+     // end;
+      end;
     end;
   end;
 end;

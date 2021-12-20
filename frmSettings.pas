@@ -4,33 +4,41 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, UCL.Form, UCL.Classes, UCL.QuickButton,
-  Vcl.ExtCtrls, UCL.CaptionBar, UCL.ListButton, UCL.Panel, Vcl.WinXPanels,
-  Vcl.StdCtrls, UCL.Text, ES.BaseControls, ES.Switch, UCL.ScrollBox,
-  Vcl.ComCtrls, UCL.Button, settings, Vcl.Menus;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, UWP.Form, UWP.Classes, UWP.QuickButton,
+  Vcl.ExtCtrls, UWP.Caption, UWP.ListButton, UWP.Panel, Vcl.WinXPanels,
+  Vcl.StdCtrls, UWP.Text, ES.BaseControls, ES.Switch, UWP.ScrollBox,
+  Vcl.ComCtrls, UWP.Button, settings, Vcl.Menus, UWP.Hotkey, Vcl.TitleBarCtrls;
 
 type
-  TformSettings = class(TUForm)
-    UCaptionBar1: TUCaptionBar;
-    UQuickButton1: TUQuickButton;
-    UPanel1: TUPanel;
-    lbGeneral: TUListButton;
-    lbTriggers: TUListButton;
-    lbSchedule: TUListButton;
-    lbAbout: TUListButton;
+  TformSettings = class(TUWPForm)
+    UCaptionBar1: TUWPCaption;
+    UQuickButton1: TUWPQuickButton;
+    UPanel1: TUWPPanel;
+    lbGeneral: TUWPListButton;
+    lbTriggers: TUWPListButton;
+    lbSchedule: TUWPListButton;
+    lbAbout: TUWPListButton;
     CardPanel1: TCardPanel;
     cardGeneral: TCard;
     cardTriggers: TCard;
     cardSchedule: TCard;
     cardAbout: TCard;
-    UText1: TUText;
-    UText2: TUText;
-    UScrollBox1: TUScrollBox;
+    UText1: TUWPLabel;
+    UText2: TUWPLabel;
+    UScrollBox1: TUWPScrollBox;
     EsSwitch1: TEsSwitch;
-    UText3: TUText;
-    UText4: TUText;
-    HotKey1: THotKey;
-    btnSaveHotkey: TUButton;
+    UText3: TUWPLabel;
+    UText4: TUWPLabel;
+    btnSaveHotkey: TUWPButton;
+//    KGrid1: TKGrid;
+    UText5: TUWPLabel;
+    Hotkey1: TUWPHotkey;
+    UWPListButton1: TUWPListButton;
+    cardMonitors: TCard;
+    chkTriggerOnFullScreen: TCheckBox;
+    TitleBarPanel1: TTitleBarPanel;
+    ledVibrance: TLabeledEdit;
+    ledGamma: TLabeledEdit;
     procedure lbAboutClick(Sender: TObject);
     procedure lbScheduleClick(Sender: TObject);
     procedure lbTriggersClick(Sender: TObject);

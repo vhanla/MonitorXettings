@@ -1,4 +1,4 @@
-unit main;
+﻿unit main;
 
 interface
 
@@ -7,7 +7,9 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus, UWP.Form,
   UWP.Caption, UWP.Classes, UWP.Button, UWP.Slider, UWP.Text, ComObj, ActiveX,
   UWP.QuickButton, UWP.ColorManager, ShellApi, settings, System.Actions,
-  Vcl.ActnList, Registry, UWP.Panel, NVAPI;
+  Vcl.ActnList, Registry, UWP.Panel, monitorHandler, System.ImageList,
+  Vcl.ImgList, ES.BaseControls,
+  ES.Switch, UWP.ListButton, Vcl.ComCtrls, madExceptVcl;
 
 const
   WM_SHELLEVENT = WM_USER + 11;
@@ -15,18 +17,7 @@ const
 
 type
   WinIsWow64 = function(aHandle: THandle; var Iret: BOOL): Winapi.Windows.BOOL; stdcall;
-  PHYSICAL_MONITOR = record
-    hPhysicalMonitor: THandle;
-    szPhysicalMonitorDescription: array[0..127] of Char;
-  end;
-
-  TMonitorSetting = record
-    Id: THandle;
-    Name: array [0..127] of Char;
-    Contrast: Integer;
-    Brightness: Integer;
-  end;
-
+  
 //  TUSlider = class (UCL.Slider.TUSlider)
 //  private
 //  //https://stackoverflow.com/questions/456488/how-to-add-mouse-wheel-support-to-a-component-descended-from-tgraphiccontrol/34463279#34463279
@@ -42,6 +33,20 @@ type
 //    property OnMouseWheelDown;
 //    property OnMouseWheelUp;
 //  end;
+
+  TVibranceInfo = record
+    isInitialized: Boolean;
+    activeOutput: Integer;
+    defaultHandle: Integer;
+    userVibranceSettingDefault: Integer;
+    userVibranceSettingActive: Integer;
+    szGPUName: string;
+    shouldRun: Boolean;
+    sleepInterval: Integer;
+    displayHandles: array[0..100] of Integer; // let's assume user has a bunch of monitors xD
+    affectPrimaryMonitorOnly: Boolean;
+    neverChangeResolution: Boolean;
+  end;
 
   TformMain = class(TUWPForm)
     TrayIcon1: TTrayIcon;
@@ -66,9 +71,17 @@ type
     UCaptionBar2: TUWPCaption;
     UPanel1: TUWPPanel;
     UPanel2: TUWPPanel;
-    USlider3: TUWPSlider;
     UText3: TUWPLabel;
     DarkerOverlay1: TMenuItem;
+    UWPListButton1: TUWPListButton;
+    UWPListButton2: TUWPListButton;
+    actBlueLightToggle: TAction;
+    UWPPanel1: TUWPPanel;
+    UWPLabel1: TUWPLabel;
+    TrackBar1: TTrackBar;
+    TrackBar2: TTrackBar;
+    UWPLabel2: TUWPLabel;
+    MadExceptionHandler1: TMadExceptionHandler;
     procedure FormCreate(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure USlider1Change(Sender: TObject);
@@ -95,6 +108,10 @@ type
     procedure USlider3Change(Sender: TObject);
     procedure DarkerOverlay1Click(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure UWPListButton1Click(Sender: TObject);
+    procedure UWPListButton2Click(Sender: TObject);
+    procedure actBlueLightToggleExecute(Sender: TObject);
+    procedure TrackBar1Change(Sender: TObject);
   protected
     { Protected declarations : known to all classes in the hierearchy}
     function GetMainTaskbarPosition:Integer;
@@ -104,6 +121,9 @@ type
     { Private declarations : only known to the parent class }
     fPrevBrightness: Cardinal;
     fPrevContrast: Cardinal;
+    FNotNVIDIA: Boolean;
+    fNoFullScreenVibrance: Cardinal;
+    fNoFullScreenGamma: Cardinal;
 
     procedure WMHotkey(var Msg: TWMHotKey); message WM_HOTKEY;
     procedure ShellEvent(var Msg: TMessage); message WM_SHELLEVENT;
@@ -118,12 +138,15 @@ type
     procedure SetHotKey(Sender: TObject; AHotKey: TShortCut);
     function AutoStartState:Boolean;
     procedure SetAutoStart(RunWithWindows: Boolean);
+    function GetScreenBrightness(monNum: Integer = 0): Integer;
   end;
 
 var
   formMain: TformMain;
   prevRect: TRect;
   hook: NativeUInt;
+  Monitors: TMonitorSettings;
+  VibranceInfos: TVibranceInfo;
 
 function RunHook(aHandle: HWND): BOOL; stdcall;
   external 'SystemHooks.dll' name 'RunHook';
@@ -132,7 +155,7 @@ function KillHook: BOOL; stdcall;
 implementation
 
 {$R *.dfm}
-uses frmSettings, utils, monitorHandler, frmDarkOverlay;
+uses frmSettings, utils, frmDarkOverlay, nvapi;
 
 procedure SetBrightness(Timeout: Integer; Brightness: Byte);
 var
@@ -178,6 +201,11 @@ procedure TformMain.About1Click(Sender: TObject);
 begin
   if formSettings.SwitchToPanel(formSettings.cardAbout) then
     formSettings.Show;
+end;
+
+procedure TformMain.actBlueLightToggleExecute(Sender: TObject);
+begin
+  UWPListButton1Click(Sender);
 end;
 
 procedure TformMain.actEscapeExecute(Sender: TObject);
@@ -242,6 +270,8 @@ var
   I: Integer;
   min, max, cur: Cardinal;
 //  value: MINIMIZEDMETRICS;
+
+  res: NvAPI_Status;
 begin
 //  FluentEnabled := True;
   AlphaBlend := True;
@@ -254,6 +284,9 @@ begin
 
   ColorizationManager.ColorizationType := ctDark;
   UCaptionBar1.Caption := '   ' + Caption;
+
+  Monitors := TMonitorSettings.Create;
+
   monitor := Screen.MonitorFromWindow(Handle);
   if GetNumberOfPhysicalMonitorsFromHMONITOR(monitor.Handle, @num) then
   begin
@@ -261,13 +294,13 @@ begin
     begin
       for I := 0 to num - 1 do
       begin
-        GetMonitorBrightness(mons[I].hPhysicalMonitor, min, cur, max);
+        GetMonitorBrightness(mons[I].hPhysicalMonitor, @min, @cur, @max);
         UCaptionBar1.Caption := '   ' + mons[I].szPhysicalMonitorDescription;
         USlider1.Min := min;
         USlider1.Max := max;
         USlider1.Value := cur;
         USlider1Change(Sender);
-        GetMonitorContrast(mons[I].hPhysicalMonitor, min, cur, max);
+        GetMonitorContrast(mons[I].hPhysicalMonitor, @min, @cur, @max);
         USlider2.Min := min;
         USlider2.Max := max;
         USlider2.Value := cur;
@@ -297,6 +330,86 @@ begin
     // otherwise it won't work
     RunWinEvent;
   end;
+
+  // Get Vibrance status
+  res := NvAPI_Initialize;
+  if res <> NVAPI_OK then
+    FNotNVIDIA := True;
+
+  var dvcinfo: NV_DISPLAY_DVC_INFO;
+  dvcinfo.version := SizeOf(NV_DISPLAY_DVC_INFO) or $10000;
+
+
+  var gpus: TNvPhysicalGPUHandleArray;
+  var gcnt: LongWord;
+  var gpuname: NVAPI_SHORTSTRING;
+  var gputemp: tnvgputhermalsettings;
+  var gputype: NV_SYSTEM_TYPE;
+
+  if NvAPI_EnumPhysicalGPUs(gpus, gcnt) = NVAPI_OK then
+  begin
+    for I := 0 to gcnt - 1 do
+    begin
+      if NvAPI_GPU_GetFullName(gpus[I], gpuname) = NVAPI_OK then
+      begin
+        //UCaptionBar1.Caption := UCaptionBar1.Caption + ' ' + gpuname;
+        FillChar(gputemp, SizeOf(gputemp), 0);
+        gputemp.version := NV_GPU_THERMAL_SETTINGS_VER;
+        res := NvAPI_GPU_GetThermalSettings(gpus[I], 0, @gputemp);
+        if res = NVAPI_OK then
+        begin
+          UWPLabel2.Caption := gpuname + #13#10'GPU Temp: ' + IntToStr(gputemp.sensor[0].currentTemp) + 'º C';
+        end;
+
+        if NvAPI_GPU_GetSystemType(gpus[I], gputype) = NVAPI_OK then
+        begin
+          if gputype = NV_SYSTEM_TYPE_UNKNOWN then
+          begin
+            // error
+            VibranceInfos.isInitialized := False;
+            UWPLabel1.Caption := 'No Vibrance';
+          end
+          else
+          begin
+            // let's continue
+            var def: Cardinal := 0;
+            var indx: Integer;
+            var EOE: Boolean := False;
+            repeat
+              def := 0;
+              res := NvAPI_EnumNvidiaDisplayHandle(indx, def);
+              if (res <> NVAPI_OK) and (res = NVAPI_END_ENUMERATION) then
+              begin
+                // def = -1 error
+                EOE := True; //End Of Enumeration
+              end
+              else
+              begin
+                VibranceInfos.displayHandles[indx] := def;
+
+                if NvAPI_GetDVCInfo(def, 0, dvcinfo) = NVAPI_OK then
+                begin
+                  TrackBar1.Min := dvcinfo.minLevel;
+                  TrackBar1.Max := dvcinfo.maxLevel;
+                  TrackBar1.Position := dvcinfo.currentLevel;
+                end;
+
+                NvAPI_SetDVCLevel(def, 0, 0);
+
+               // NvAPI_GetAssociatedNvidiaDisplayHandle(
+              end;
+              Inc(indx);
+            until (EOE = True);
+          end;
+        end;
+
+      end;
+    end;
+  end;
+
+  // hide panel 1 since native access now is impossible, at least on my current monitors
+  UPanel1.Visible := False;
+  Height := Height - UPanel1.Height;
 end;
 
 procedure TformMain.FormDeactivate(Sender: TObject);
@@ -316,6 +429,11 @@ end;
 
 procedure TformMain.FormDestroy(Sender: TObject);
 begin
+  // restore vibrance
+  if not FNotNVIDIA then
+  begin
+    NvAPI_SetDVCLevel(VibranceInfos.displayHandles[0], 0, 0);
+  end;
   // restore default gamma value (128)
   SetDisplayGamma(128);
 
@@ -342,6 +460,8 @@ begin
   begin
     SendMessageTimeout(FindWindow('MonitorXettings64Hwnd', nil),WM_CLOSE,0,0,SMTO_NORMAL or SMTO_ABORTIFHUNG,500,0);
   end;
+
+  Monitors.Free;
 end;
 
 procedure TformMain.FormShow(Sender: TObject);
@@ -393,6 +513,39 @@ begin
   end;
 end;
 
+function TformMain.GetScreenBrightness(monNum: Integer): Integer;
+type
+  TRGBALine = array[Word] of TRGBQuad;
+  PRGBALine = ^TRGBALine;
+var
+  dc: HDC;
+  bmp: HBITMAP;
+  tempdc: HDC;
+  gdiobj: HGDIOBJ;
+  bits: prgbaline;
+  bitmapinfo: TBitmapInfo;
+  I: Integer;// absolute buffer;
+begin
+  dc := GetDC(0);
+  bmp := CreateCompatibleBitmap(dc, Screen.Width, Screen.Height);
+  tempdc := CreateCompatibleDC(dc);
+  gdiobj := SelectObject(tempdc, bmp);
+
+  BitBlt(tempdc, 0, 0, Screen.Width, Screen.Height, dc, 0, 0, SRCCOPY);
+  //ZeroMemory(@bitmapinfo, SizeOf(TBitmapInfo));
+  bitmapinfo.bmiHeader.biSize := SizeOf(BITMAPINFOHEADER);
+  GetDIBits(tempdc, bmp, 0, Screen.Height, bits, bitmapinfo, DIB_RGB_COLORS);
+
+  SelectObject(tempdc, gdiobj);
+  DeleteObject(bmp);
+  DeleteObject(gdiobj);
+  DeleteDC(tempdc);
+  DeleteDC(dc);
+  //ReleaseDC(dc);
+  for I := 0 to bitmapinfo.bmiHeader.biSizeImage do
+
+end;
+
 function TformMain.Is64bits: Boolean;
 var
   HandleTo64bitprocess:  WinIsWow64;
@@ -417,13 +570,22 @@ begin
   begin
     if DetectFullScreenApp(LHWindow) then
     begin
-      USlider3.Value := 220;
+      //USlider3.Value := 220;
+      //USlider2.Value := 50;
+      if formSettings.chkTriggerOnFullScreen.Checked then
+      begin
+        TrackBar1.Position := StrToInt(formSettings.ledVibrance.Text);
+        TrackBar2.Position := StrToInt(formSettings.ledGamma.Text);
+      end;
       if DarkerOverlay1.Checked then
         formDarker.Hide;
     end
     else
     begin
-      USlider3.Value := 100;
+      //USlider3.Value := 100;
+      //USlider2.Value := 0;
+      TrackBar1.Position := FNoFullScreenVibrance;
+      TrackBar2.Position := FNoFullScreenGamma;
       if DarkerOverlay1.Checked then
       begin
         formDarker.Show;
@@ -575,10 +737,14 @@ begin
       begin
         if DetectFullScreenApp(LHWindow) then
         begin
-          USlider3.Value := 220;
+          //USlider3.Value := 220;
+          //USlider2.Value := 50;
+          //TrackBar1.Position := 30;
         end
         else
-          USlider3.Value := 100;
+          //USlider3.Value := 100;
+          //USlider2.Value := 0;
+          //TrackBar1.Position := 0;
       end;
     end;
 
@@ -636,6 +802,7 @@ procedure TformMain.Timer1Timer(Sender: TObject);
 var
   changed: Boolean;
 begin
+//  GetScreenBrightness();
   changed := False;
   if fPrevBrightness <> USlider1.Value then
   begin
@@ -678,10 +845,21 @@ begin
   end;
 end;
 
+procedure TformMain.TrackBar1Change(Sender: TObject);
+begin
+  NvAPI_SetDVCLevel(VibranceInfos.displayHandles[0], 0, TrackBar1.Position);
+  UWPLabel1.Caption := TrackBar1.Position.ToString;
+  if not DetectFullScreenApp(GetForegroundWindow) then
+    fNoFullScreenVibrance := TrackBar1.Position;
+end;
+
 procedure TformMain.TrayIcon1Click(Sender: TObject);
 begin
   if not Visible then
+  begin
+    StyleName := 'WinDark';
     ShowPopup
+  end
   else
     Hide;
 end;
@@ -720,7 +898,7 @@ begin
     begin
       for I := 0 to num - 1 do
       begin
-        GetMonitorBrightness(mons[I].hPhysicalMonitor, min, cur, max);
+        GetMonitorBrightness(mons[I].hPhysicalMonitor, @min, @cur, @max);
         //ListBox1.Items.Add(FloatToStr((cur-min)/(max-min)*100));
         USlider1.Min := min;
         USlider1.Max := max;
@@ -737,7 +915,7 @@ end;
 procedure TformMain.UCaptionBar2DblClick(Sender: TObject);
 begin
   SetDisplayGamma(128);
-  USlider3.Value := 128;
+  Trackbar2.Position := 128;
   UText3.Caption := '128';
 end;
 
@@ -761,22 +939,100 @@ end;
 
 procedure TformMain.USlider3Change(Sender: TObject);
 begin
-  SetDisplayGamma(USlider3.Value);
-  UText3.Caption := USlider3.Value.ToString;
+  SetDisplayGamma(Trackbar2.Position);
+  UText3.Caption := Trackbar2.Position.ToString;
+  if not DetectFullScreenApp(GetForegroundWindow) then
+    fNoFullScreenGamma := TrackBar2.Position;
 end;
 
 procedure TformMain.USlider3MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  SetDisplayGamma(USlider3.Value);
-  UText3.Caption := USlider3.Value.ToString;
+  SetDisplayGamma(Trackbar2.Position);
+  UText3.Caption := Trackbar2.Position.ToString;
 end;
 
 procedure TformMain.USlider3MouseWheel(Sender: TObject; Shift: TShiftState;
   WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
 begin
-  SetDisplayGamma(USlider3.Value);
-  UText3.Caption := USlider3.Value.ToString;
+  SetDisplayGamma(Trackbar2.Position);
+  UText3.Caption := Trackbar2.Position.ToString;
+end;
+
+procedure TformMain.UWPListButton1Click(Sender: TObject);
+var
+  reg: TRegistry;
+  buf: array of byte;
+  vSize: Integer;
+  I: Integer;
+  J: Integer;
+begin
+  // TODO; check if Windows 10 is Creators Update build 15002 or newer
+  reg := TRegistry.Create;
+  try
+    reg.RootKey := HKEY_CURRENT_USER;
+    if reg.OpenKey('Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\DefaultAccount\Current\default$windows.data.bluelightreduction.bluelightreductionstate\windows.data.bluelightreduction.bluelightreductionstate', False) then
+    begin
+      if reg.ValueExists('Data') then
+      begin
+        vSize := reg.GetDataSize('Data');
+        if vSize > 0 then
+        begin
+          SetLength(buf, vSize);
+          reg.ReadBinaryData('Data', buf[0], vSize);
+          if buf[18] = $15 then // enabled
+          begin
+            UWPListButton1.FontIcon := '';
+            UWPListButton1.Detail := 'OFF';
+            // turn it off
+            for I := 10 to 14 do
+            begin
+              if buf[I] <> $ff then
+              begin
+                buf[I] := buf[I] + 1;
+                Break;
+              end;
+            end;
+            buf[18] := $13;
+            for I := 24 downto 23 do
+              for J := I to vSize - 3 do
+                buf[J] := buf[J + 1];
+          end
+          else if buf[18] = $13 then // disabled
+          begin
+            UWPListButton1.FontIcon := '';
+            UWPListButton1.Detail := 'ON';
+            // turn it on
+            for I := 10 to 14 do
+            begin
+              if buf[I] <> $ff then
+                begin
+                  Inc(buf[I]);
+                  Break;
+                end;
+            end;
+            buf[18] := $15;
+            for J := vSize - 1 downto 24 do
+              buf[J] := buf[J - 1];
+            for J := vSize - 1 downto 24 do
+              buf[J] := buf[J - 1];
+            buf[23] := $10;
+            buf[24] := 0;
+          end;
+        end;
+      end;
+      // update registry
+      reg.WriteBinaryData('Data', buf[0], vSize);
+      reg.CloseKey;
+    end;
+  finally
+    reg.Free;
+  end;
+end;
+
+procedure TformMain.UWPListButton2Click(Sender: TObject);
+begin
+  ShellExecute(0, PChar('OPEN'), 'ms-settings:nightlight?activationSource=SMC-IA-4027563', nil, nil, SW_SHOWNORMAL);
 end;
 
 procedure TformMain.WMHotkey(var Msg: TWMHotKey);
@@ -794,7 +1050,10 @@ begin
     vMonitor := Screen.MonitorFromWindow(Handle);
     Left := vMonitor.Left + (vMonitor.Width - Width) div 2;
     Top := vMonitor.Top + (vMonitor.Height - Height) div 2;
-    Show;
+    if not Visible then
+      Show
+    else
+      Hide;
     SetForegroundWindow(Handle);
   end;
 

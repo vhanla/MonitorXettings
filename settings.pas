@@ -49,6 +49,17 @@ type
     fAppTriggers: TAppTriggers;
     fAutoRun: Boolean;
     fHotKey: string;
+    fOverlayHotkey: string;
+    fDefBrightness: Integer;
+    fDefContrast: Integer;
+    fDefVibrance: Integer;
+    fDefGamma: Integer;  // single monitor only
+    fFullBrightness: Integer;
+    fFullContrast: Integer;
+    fFullVibrance: Integer;
+    fFullGamma: Integer;
+    fFullSettings: Boolean; // single monitor only
+    fOverlayOpacity: Integer;
     procedure SetAutorun(aEnable: Boolean);
   public
     constructor Create;
@@ -56,6 +67,17 @@ type
   published
     property Autorun: Boolean read fAutoRun write SetAutorun;
     property HotKey: string read fHotKey write fHotKey;
+    property OverlayHotkey: string read fOverlayHotkey write fOverlayHotkey;
+    property DefaultBrightness: Integer read fDefBrightness write fDefBrightness;
+    property DefaultContrast: Integer read fDefContrast write fDefContrast;
+    property DefaultVibrance: Integer read fDefVibrance write fDefVibrance;
+    property DefaultGamma: Integer read fDefGamma write fDefGamma;
+    property FullscreenBrightness: Integer read fFullBrightness write fFullBrightness;
+    property FullscreenContrast: Integer read fFullContrast write fFullContrast;
+    property FullscreenVibrance: Integer read fFullVibrance write fFullVibrance;
+    property FullscreenGamma: Integer read fFullGamma write fFullGamma;
+    property FullscreenSettingsOn: Boolean read fFullSettings write fFullSettings;
+    property OverlayOpacity: Integer read fOverlayOpacity write fOverlayOpacity;
   end;
 
   TSettingsHandler = class(TObject)

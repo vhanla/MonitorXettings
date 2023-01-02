@@ -5,11 +5,12 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus, UWP.Form,
-  UWP.Caption, UWP.Classes, UWP.Button, UWP.Slider, UWP.Text, ComObj, ActiveX,
+  UWP.Classes, UWP.Button, UWP.Slider, UWP.Text, ComObj, ActiveX,
   UWP.QuickButton, UWP.ColorManager, ShellApi, settings, System.Actions,
   Vcl.ActnList, Registry, UWP.Panel, monitorHandler, System.ImageList,
   Vcl.ImgList, ES.BaseControls,
-  ES.Switch, UWP.ListButton, Vcl.ComCtrls, madExceptVcl;
+  ES.Switch, UWP.ListButton, Vcl.ComCtrls, madExceptVcl, JvComponentBase,
+  JvAppStorage, JvAppXMLStorage, rkSmartTabs, rkAeroTabs, luminance, JvAppIniStorage;
 
 const
   WM_SHELLEVENT = WM_USER + 11;
@@ -17,7 +18,7 @@ const
 
 type
   WinIsWow64 = function(aHandle: THandle; var Iret: BOOL): Winapi.Windows.BOOL; stdcall;
-  
+
 //  TUSlider = class (UCL.Slider.TUSlider)
 //  private
 //  //https://stackoverflow.com/questions/456488/how-to-add-mouse-wheel-support-to-a-component-descended-from-tgraphiccontrol/34463279#34463279
@@ -48,6 +49,7 @@ type
     neverChangeResolution: Boolean;
   end;
 
+
   TformMain = class(TUWPForm)
     TrayIcon1: TTrayIcon;
     PopupMenu1: TPopupMenu;
@@ -55,41 +57,39 @@ type
     Settings1: TMenuItem;
     N1: TMenuItem;
     About1: TMenuItem;
-    UCaptionBar1: TUWPCaption;
     Timer1: TTimer;
-    USlider1: TUWPSlider;
-    UButton1: TUWPButton;
     UText1: TUWPLabel;
-    UQuickButton1: TUWPQuickButton;
-    UButton2: TUWPButton;
-    USlider2: TUWPSlider;
     UText2: TUWPLabel;
     tmrHider: TTimer;
     ActionList1: TActionList;
     actEscape: TAction;
     tmr64HelperPersist: TTimer;
-    UCaptionBar2: TUWPCaption;
-    UPanel1: TUWPPanel;
-    UPanel2: TUWPPanel;
+    UPanel1: TPanel;
+    UPanel2: TPanel;
     UText3: TUWPLabel;
     DarkerOverlay1: TMenuItem;
     UWPListButton1: TUWPListButton;
-    UWPListButton2: TUWPListButton;
+    btnAutoLevel: TUWPListButton;
     actBlueLightToggle: TAction;
-    UWPPanel1: TUWPPanel;
+    UWPPanel1: TPanel;
     UWPLabel1: TUWPLabel;
-    TrackBar1: TTrackBar;
-    TrackBar2: TTrackBar;
+    tbVibrance: TTrackBar;
+    tbGamma: TTrackBar;
     UWPLabel2: TUWPLabel;
     MadExceptionHandler1: TMadExceptionHandler;
+    Button1: TButton;
+    Button2: TButton;
+    tbContrast: TTrackBar;
+    tbBrightness: TTrackBar;
+    Panel1: TPanel;
+    selNormal: TUWPListButton;
+    selFullscreen: TUWPListButton;
+    btnSaveCustom: TUWPListButton;
+    chkFullTrigger: TUWPListButton;
     procedure FormCreate(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
-    procedure USlider1Change(Sender: TObject);
-    procedure UButton1Click(Sender: TObject);
-    procedure UButton2Click(Sender: TObject);
     procedure USlider1MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure USlider2Change(Sender: TObject);
     procedure Exit1Click(Sender: TObject);
     procedure Settings1Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -102,16 +102,23 @@ type
     procedure tmr64HelperPersistTimer(Sender: TObject);
     procedure USlider3MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure UCaptionBar2DblClick(Sender: TObject);
     procedure USlider3MouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure USlider3Change(Sender: TObject);
     procedure DarkerOverlay1Click(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure UWPListButton1Click(Sender: TObject);
-    procedure UWPListButton2Click(Sender: TObject);
+    procedure btnAutoLevelClick(Sender: TObject);
     procedure actBlueLightToggleExecute(Sender: TObject);
-    procedure TrackBar1Change(Sender: TObject);
+    procedure tbVibranceChange(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
+    procedure tbGammaTracking(Sender: TObject);
+    procedure tbBrightnessChange(Sender: TObject);
+    procedure tbContrastChange(Sender: TObject);
+    procedure btnSaveCustomClick(Sender: TObject);
+    procedure selNormalClick(Sender: TObject);
+    procedure selFullscreenClick(Sender: TObject);
   protected
     { Protected declarations : known to all classes in the hierearchy}
     function GetMainTaskbarPosition:Integer;
@@ -125,6 +132,10 @@ type
     fNoFullScreenVibrance: Cardinal;
     fNoFullScreenGamma: Cardinal;
 
+    ThreadRunning: Boolean;
+    FinishThread: Boolean;
+    FFullScreenForeground: Boolean;
+
     procedure WMHotkey(var Msg: TWMHotKey); message WM_HOTKEY;
     procedure ShellEvent(var Msg: TMessage); message WM_SHELLEVENT;
     procedure ResizeEvent(var Msg: TMessage); message WM_RESIZEEVENT;
@@ -136,6 +147,7 @@ type
     Settings: TSettings;
     { Public declarations : known externally by class users}
     procedure SetHotKey(Sender: TObject; AHotKey: TShortCut);
+    procedure SetOverlayHotKey(Sender: TObject; AHotKey: TShortCut);
     function AutoStartState:Boolean;
     procedure SetAutoStart(RunWithWindows: Boolean);
     function GetScreenBrightness(monNum: Integer = 0): Integer;
@@ -155,7 +167,7 @@ function KillHook: BOOL; stdcall;
 implementation
 
 {$R *.dfm}
-uses frmSettings, utils, frmDarkOverlay, nvapi;
+uses frmSettings, utils, frmDarkOverlay, nvapi, System.Threading;
 
 procedure SetBrightness(Timeout: Integer; Brightness: Byte);
 var
@@ -231,6 +243,74 @@ begin
   end;
 end;
 
+procedure TformMain.btnSaveCustomClick(Sender: TObject);
+begin
+  if selFullscreen.Selected then
+  begin
+    Settings.FullscreenBrightness := tbBrightness.Position;
+    Settings.FullscreenContrast := tbContrast.Position;
+    Settings.FullscreenVibrance := tbVibrance.Position;
+    Settings.FullscreenGamma := tbGamma.Position;
+    TSettingsHandler.SaveSettings(Settings);
+  end
+  else
+  begin
+    Settings.DefaultBrightness := tbBrightness.Position;
+    Settings.DefaultContrast := tbContrast.Position;
+    Settings.DefaultVibrance := tbVibrance.Position;
+    Settings.DefaultGamma := tbGamma.Position;
+    TSettingsHandler.SaveSettings(Settings);
+  end;
+end;
+
+procedure TformMain.Button1Click(Sender: TObject);
+begin
+
+// old not working, at least not in non laptops
+  try
+    CoInitialize(nil);
+    try
+      GetBrightness(5);
+    finally
+      CoUninitialize;
+    end;
+  except
+    on E:EOleException do
+      ShowMessage(Format('EOleException %s %x', [E.Message, E.ErrorCode]));
+    on E:Exception do
+      ShowMessage(E.ClassName + ':' + E.Message);
+  end;
+end;
+
+procedure TformMain.Button2Click(Sender: TObject);
+var
+  mons: array[0..5] of PHYSICAL_MONITOR;
+  monitor: TMonitor;
+  num: DWORD;
+  I: Integer;
+  min, max, cur: Cardinal;
+begin
+  monitor := Screen.MonitorFromWindow(Handle);
+  if GetNumberOfPhysicalMonitorsFromHMONITOR(monitor.Handle, @num) then
+  begin
+    if GetPhysicalMonitorsFromHMONITOR(monitor.Handle, num, @mons) then
+    begin
+      for I := 0 to num - 1 do
+      begin
+        GetMonitorBrightness(mons[I].hPhysicalMonitor, @min, @cur, @max);
+        //ListBox1.Items.Add(FloatToStr((cur-min)/(max-min)*100));
+        tbBrightness.Min := min;
+        tbBrightness.Max := max;
+//        USlider1.Value := cur;
+        SetMonitorBrightness(mons[I].hPhysicalMonitor,round( min+(max-min)*(tbBrightness.Position/100)));
+        SetMonitorContrast(mons[I].hPhysicalMonitor,round( min+(max-min)*(tbContrast.Position/100)));
+      end;
+    end;
+    DestroyPhysicalMonitors(num, @mons);
+  end;
+
+end;
+
 procedure TformMain.CreateParams(var Params: TCreateParams);
 begin
   inherited;
@@ -253,11 +333,15 @@ end;
 
 procedure TformMain.Exit1Click(Sender: TObject);
 begin
+  Hide;
+  Sleep(10);
   Close;
 end;
 
 procedure TformMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
+  FinishThread := True;
+  Sleep(100);
   DarkerOverlay1.Checked := False;
   formDarker.Hide;
 end;
@@ -282,8 +366,8 @@ begin
   Settings := TSettingsHandler.LoadSettings;
   SetHotKey(Sender, TextToShortCut(Settings.HotKey));
 
-  ColorizationManager.ColorizationType := ctDark;
-  UCaptionBar1.Caption := '   ' + Caption;
+//  ColorizationManager.ColorizationType := ctDark;
+//  UCaptionBar1.Caption := '   ' + Caption;
 
   Monitors := TMonitorSettings.Create;
 
@@ -295,16 +379,16 @@ begin
       for I := 0 to num - 1 do
       begin
         GetMonitorBrightness(mons[I].hPhysicalMonitor, @min, @cur, @max);
-        UCaptionBar1.Caption := '   ' + mons[I].szPhysicalMonitorDescription;
-        USlider1.Min := min;
-        USlider1.Max := max;
-        USlider1.Value := cur;
-        USlider1Change(Sender);
+//        UCaptionBar1.Caption := '   ' + mons[I].szPhysicalMonitorDescription;
+        tbBrightness.Min := min;
+        tbBrightness.Max := max;
+        tbBrightness.Position := cur;
+        tbBrightnessChange(Sender);
         GetMonitorContrast(mons[I].hPhysicalMonitor, @min, @cur, @max);
-        USlider2.Min := min;
-        USlider2.Max := max;
-        USlider2.Value := cur;
-        USlider2Change(Sender);
+        tbContrast.Min := min;
+        tbContrast.Max := max;
+        tbContrast.Position := cur;
+        tbContrastChange(Sender);
 //        SetMonitorBrightness(mons[I].hPhysicalMonitor,round( min+(max-min)*(100/100)));
       end;
 
@@ -373,25 +457,40 @@ begin
           begin
             // let's continue
             var def: Cardinal := 0;
-            var indx: Integer;
+            var indx: Integer := 0;
             var EOE: Boolean := False;
             repeat
               def := 0;
               res := NvAPI_EnumNvidiaDisplayHandle(indx, def);
-              if (res <> NVAPI_OK) and (res = NVAPI_END_ENUMERATION) then
+              if (res <> NVAPI_OK)
+              then
               begin
-                // def = -1 error
-                EOE := True; //End Of Enumeration
+                //def := -1;// error
+                case res of
+                  NVAPI_END_ENUMERATION:
+                  begin
+                    EOE := True; //End Of Enumeration
+                  end;
+                  NVAPI_NVIDIA_DEVICE_NOT_FOUND:
+                  begin
+
+                  end;
+                  NVAPI_INVALID_ARGUMENT:
+                  begin
+
+                  end;
+                end;
               end
               else
               begin
+
                 VibranceInfos.displayHandles[indx] := def;
 
                 if NvAPI_GetDVCInfo(def, 0, dvcinfo) = NVAPI_OK then
                 begin
-                  TrackBar1.Min := dvcinfo.minLevel;
-                  TrackBar1.Max := dvcinfo.maxLevel;
-                  TrackBar1.Position := dvcinfo.currentLevel;
+                  tbVibrance.Min := dvcinfo.minLevel;
+                  tbVibrance.Max := dvcinfo.maxLevel;
+                  tbVibrance.Position := dvcinfo.currentLevel;
                 end;
 
                 NvAPI_SetDVCLevel(def, 0, 0);
@@ -408,8 +507,10 @@ begin
   end;
 
   // hide panel 1 since native access now is impossible, at least on my current monitors
-  UPanel1.Visible := False;
-  Height := Height - UPanel1.Height;
+//  UPanel1.Visible := False;
+//  Height := Height - UPanel1.Height;
+
+
 end;
 
 procedure TformMain.FormDeactivate(Sender: TObject);
@@ -429,6 +530,8 @@ end;
 
 procedure TformMain.FormDestroy(Sender: TObject);
 begin
+//  FDedup.Free;
+
   // restore vibrance
   if not FNotNVIDIA then
   begin
@@ -454,6 +557,12 @@ begin
   begin
     UnregisterHotKey(Handle, GlobalFindAtom('MXHOTKEY'));
     GlobalDeleteAtom(GlobalFindAtom('MXHOTKEY'));
+  end;
+
+  if GlobalFindAtom('MYHOTKEY') <> 0 then
+  begin
+    UnregisterHotKey(Handle, GlobalFindAtom('MYHOTKEY'));
+    GlobalDeleteAtom(GlobalFindAtom('MYHOTKEY'));
   end;
 
   if Is64bits then
@@ -542,7 +651,7 @@ begin
   DeleteDC(tempdc);
   DeleteDC(dc);
   //ReleaseDC(dc);
-  for I := 0 to bitmapinfo.bmiHeader.biSizeImage do
+//  for I := 0 to bitmapinfo.bmiHeader.biSizeImage do
 
 end;
 
@@ -572,10 +681,13 @@ begin
     begin
       //USlider3.Value := 220;
       //USlider2.Value := 50;
-      if formSettings.chkTriggerOnFullScreen.Checked then
+      //if formSettings.chkTriggerOnFullScreen.Checked then
+      if chkFullTrigger.Selected then      
       begin
-        TrackBar1.Position := StrToInt(formSettings.ledVibrance.Text);
-        TrackBar2.Position := StrToInt(formSettings.ledGamma.Text);
+        //tbVibrance.Position := StrToInt(formSettings.ledVibrance.Text);
+        //tbGamma.Position := StrToInt(formSettings.ledGamma.Text);
+        selFullscreenClick(nil);
+        FFullScreenForeground := True;
       end;
       if DarkerOverlay1.Checked then
         formDarker.Hide;
@@ -584,8 +696,11 @@ begin
     begin
       //USlider3.Value := 100;
       //USlider2.Value := 0;
-      TrackBar1.Position := FNoFullScreenVibrance;
-      TrackBar2.Position := FNoFullScreenGamma;
+//      tbVibrance.Position := FNoFullScreenVibrance;
+//      tbGamma.Position := FNoFullScreenGamma;
+      selNormalClick(nil);
+      FFullScreenForeground := False;
+
       if DarkerOverlay1.Checked then
       begin
         formDarker.Show;
@@ -627,6 +742,22 @@ begin
   hook := SetWinEventHook(EVENT_MIN, EVENT_MAX, 0, @WinEventProc, 0, 0, WINEVENT_OUTOFCONTEXT or WINEVENT_SKIPOWNPROCESS );
   if hook = 0 then
     raise Exception.Create('Couldn''t create event hook');
+end;
+
+procedure TformMain.selFullscreenClick(Sender: TObject);
+begin
+  tbBrightness.Position := Settings.FullscreenBrightness;
+  tbContrast.Position := Settings.FullscreenContrast;
+  tbVibrance.Position := Settings.FullscreenVibrance;
+  tbGamma.Position := Settings.FullscreenGamma;
+end;
+
+procedure TformMain.selNormalClick(Sender: TObject);
+begin
+  tbBrightness.Position := Settings.DefaultBrightness;
+  tbContrast.Position := Settings.DefaultContrast;
+  tbVibrance.Position := Settings.DefaultVibrance;
+  tbGamma.Position := Settings.DefaultGamma;
 end;
 
 procedure TformMain.SetAutoStart(RunWithWindows: Boolean);
@@ -710,6 +841,42 @@ begin
   end;
 end;
 
+procedure TformMain.SetOverlayHotKey(Sender: TObject; AHotKey: TShortCut);
+var
+  key: WORD;
+  modifier: Integer;
+begin
+  if Sender is TformMain then
+    AHotKey := TextToShortCut(Settings.OverlayHotkey);
+  key := AHotKey and not (scShift + scCtrl + scAlt);
+  modifier := 0;
+  if AHotKey and scShift <> 0 then modifier := MOD_SHIFT + MOD_NOREPEAT;
+  if AHotKey and scAlt <> 0 then modifier := modifier + MOD_ALT;
+  if AHotKey and scCtrl <> 0 then modifier := modifier + MOD_CONTROL;
+
+  // re-register overlay hotkey
+  if GlobalFindAtom('MYHOTKEY') <> 0 then
+  begin
+    UnregisterHotKey(Handle, GlobalFindAtom('MYHOTKEY'));
+    GlobalDeleteAtom(GlobalFindAtom('MYHOTKEY'));
+  end;
+
+  if not RegisterHotKey(Handle, GlobalAddAtom('MYHOTKEY'), modifier, key) then
+  begin
+    MessageDlg(ShortCutToText(AHotKey) + ' failed to register, try another hotkey.', mtError, [mbOK], 0);
+  end
+  else
+  begin
+    if Sender is TUWPButton then
+    begin
+      MessageDlg(ShortCutToText(AHotkey) + ' successfully registered.', TMsgDlgType.mtInformation, [mbOK], 0);
+      Settings.OverlayHotKey := ShortCutToText(AHotKey);
+      TSettingsHandler.SaveSettings(formMain.Settings);
+    end;
+  end;
+
+end;
+
 procedure TformMain.Settings1Click(Sender: TObject);
 begin
   formSettings.Visible := not formSettings.Visible;
@@ -730,7 +897,7 @@ begin
       SetLength(title, titlelen);
       GetWindowText(LHWindow, PChar(title), titleLen + 1);
       title := PChar(title);
-      UCaptionBar1.Caption := title;
+//      UCaptionBar1.Caption := title;
       TrayIcon1.Hint := title;
       //detect fullscreen
       //if not IsDirectXAppRunningFullScreen then
@@ -804,19 +971,19 @@ var
 begin
 //  GetScreenBrightness();
   changed := False;
-  if fPrevBrightness <> USlider1.Value then
+  if fPrevBrightness <> tbBrightness.Position then
   begin
-    fPrevBrightness := USlider1.Value;
+    fPrevBrightness := tbBrightness.Position;
     changed := True;
   end;
-  if fPrevContrast <> USlider2.Value then
+  if fPrevContrast <> tbContrast.Position then
   begin
     changed := True;
-    fPrevContrast := USlider2.Value;
+    fPrevContrast := tbContrast.Position;
   end;
 
   if changed then
-    UButton2Click(Sender);
+    Button2Click(Sender);
 end;
 
 procedure TformMain.tmr64HelperPersistTimer(Sender: TObject);
@@ -845,12 +1012,29 @@ begin
   end;
 end;
 
-procedure TformMain.TrackBar1Change(Sender: TObject);
+procedure TformMain.tbVibranceChange(Sender: TObject);
 begin
-  NvAPI_SetDVCLevel(VibranceInfos.displayHandles[0], 0, TrackBar1.Position);
-  UWPLabel1.Caption := TrackBar1.Position.ToString;
+  NvAPI_SetDVCLevel(VibranceInfos.displayHandles[0], 0, tbVibrance.Position);
+  UWPLabel1.Caption := tbVibrance.Position.ToString;
   if not DetectFullScreenApp(GetForegroundWindow) then
-    fNoFullScreenVibrance := TrackBar1.Position;
+    fNoFullScreenVibrance := tbVibrance.Position;
+end;
+
+procedure TformMain.tbGammaTracking(Sender: TObject);
+begin
+  SendMessage(tbGamma.Handle, WM_UPDATEUISTATE, UIS_CLEAR OR UISF_HIDEFOCUS, 0);
+end;
+
+procedure TformMain.tbBrightnessChange(Sender: TObject);
+begin
+  UText1.Caption := 'Brightness: ' + tbBrightness.Position.ToString;
+  Button2Click(Sender);
+end;
+
+procedure TformMain.tbContrastChange(Sender: TObject);
+begin
+  UText2.Caption := 'Contrast: ' + tbContrast.Position.ToString;
+  Button2Click(Sender);
 end;
 
 procedure TformMain.TrayIcon1Click(Sender: TObject);
@@ -864,99 +1048,32 @@ begin
     Hide;
 end;
 
-procedure TformMain.UButton1Click(Sender: TObject);
-begin
-
-// old not working, at least not in non laptops
-  try
-    CoInitialize(nil);
-    try
-      GetBrightness(5);
-    finally
-      CoUninitialize;
-    end;
-  except
-    on E:EOleException do
-      ShowMessage(Format('EOleException %s %x', [E.Message, E.ErrorCode]));
-    on E:Exception do
-      ShowMessage(E.ClassName + ':' + E.Message);
-  end;
-end;
-
-procedure TformMain.UButton2Click(Sender: TObject);
-var
-  mons: array[0..5] of PHYSICAL_MONITOR;
-  monitor: TMonitor;
-  num: DWORD;
-  I: Integer;
-  min, max, cur: Cardinal;
-begin
-  monitor := Screen.MonitorFromWindow(Handle);
-  if GetNumberOfPhysicalMonitorsFromHMONITOR(monitor.Handle, @num) then
-  begin
-    if GetPhysicalMonitorsFromHMONITOR(monitor.Handle, num, @mons) then
-    begin
-      for I := 0 to num - 1 do
-      begin
-        GetMonitorBrightness(mons[I].hPhysicalMonitor, @min, @cur, @max);
-        //ListBox1.Items.Add(FloatToStr((cur-min)/(max-min)*100));
-        USlider1.Min := min;
-        USlider1.Max := max;
-//        USlider1.Value := cur;
-        SetMonitorBrightness(mons[I].hPhysicalMonitor,round( min+(max-min)*(USlider1.Value/100)));
-        SetMonitorContrast(mons[I].hPhysicalMonitor,round( min+(max-min)*(USlider2.Value/100)));
-      end;
-    end;
-    DestroyPhysicalMonitors(num, @mons);
-  end;
-
-end;
-
-procedure TformMain.UCaptionBar2DblClick(Sender: TObject);
-begin
-  SetDisplayGamma(128);
-  Trackbar2.Position := 128;
-  UText3.Caption := '128';
-end;
-
-procedure TformMain.USlider1Change(Sender: TObject);
-begin
-  UText1.Caption := 'Brightness: ' + USlider1.Value.ToString;
-//  fPrevBrightness := USlider1.Value;
-end;
-
 procedure TformMain.USlider1MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  UButton2Click(Sender);
-end;
-
-procedure TformMain.USlider2Change(Sender: TObject);
-begin
-  UText2.Caption := 'Contrast: ' + USlider2.Value.ToString;
-//  fPrevContrast := USlider2.Value;
+  Button2Click(Sender);
 end;
 
 procedure TformMain.USlider3Change(Sender: TObject);
 begin
-  SetDisplayGamma(Trackbar2.Position);
-  UText3.Caption := Trackbar2.Position.ToString;
+  SetDisplayGamma(tbGamma.Position);
+  UText3.Caption := tbGamma.Position.ToString;
   if not DetectFullScreenApp(GetForegroundWindow) then
-    fNoFullScreenGamma := TrackBar2.Position;
+    fNoFullScreenGamma := tbGamma.Position;
 end;
 
 procedure TformMain.USlider3MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  SetDisplayGamma(Trackbar2.Position);
-  UText3.Caption := Trackbar2.Position.ToString;
+  SetDisplayGamma(tbGamma.Position);
+  UText3.Caption := tbGamma.Position.ToString;
 end;
 
 procedure TformMain.USlider3MouseWheel(Sender: TObject; Shift: TShiftState;
   WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
 begin
-  SetDisplayGamma(Trackbar2.Position);
-  UText3.Caption := Trackbar2.Position.ToString;
+  SetDisplayGamma(tbGamma.Position);
+  UText3.Caption := tbGamma.Position.ToString;
 end;
 
 procedure TformMain.UWPListButton1Click(Sender: TObject);
@@ -1030,9 +1147,67 @@ begin
   end;
 end;
 
-procedure TformMain.UWPListButton2Click(Sender: TObject);
+procedure TformMain.btnAutoLevelClick(Sender: TObject);
 begin
-  ShellExecute(0, PChar('OPEN'), 'ms-settings:nightlight?activationSource=SMC-IA-4027563', nil, nil, SW_SHOWNORMAL);
+//  ShellExecute(0, PChar('OPEN'), 'ms-settings:nightlight?activationSource=SMC-IA-4027563', nil, nil, SW_SHOWNORMAL);
+  if ThreadRunning then
+  begin
+    FinishThread := True;
+    Exit;
+  end;
+
+//  ShowMessage(Snap.GetScreenBrightness.ToString);
+  ThreadRunning := True;
+  FinishThread := False;
+  btnAutoLevel.Detail := 'ON';
+  btnAutoLevel.Selected := True;
+  TTask.Run(
+    procedure
+    var
+      Active: Boolean;
+      Snaper: TDedup;
+      CurLum, PrevLum: Integer;
+    begin
+      Active := True;
+      Snaper := TDedup.Create;
+      while Active do
+      begin
+        Sleep(250);
+        CurLum := Snaper.GetScreenBrightness;
+
+//        if PrevLum <> CurLum then
+//        begin
+//          PrevLum := CurLum;
+//        end;
+
+        TThread.Synchronize(nil,
+        procedure
+        begin
+          Active := not FinishThread;
+          //Caption := IntToStr(CurLum);
+          if not FFullScreenForeground then
+          begin
+            // gamma works only in single monitor
+            var newGamma := CurLum div 2; //hard coded levels [TODO] make it more customizable
+            // 256 to half, since gamma normal level is 128 (100%)
+              tbGamma.Position := 30+(128-newGamma);
+              btnAutoLevel.Caption := CurLum.ToString;
+          end;
+        end);
+      end;
+
+      Snaper.Free;
+
+      TThread.Synchronize(nil,
+      procedure
+      begin
+        ThreadRunning := False;
+        btnAutoLevel.Detail := 'OFF';
+        btnAutoLevel.Selected := False;
+      end
+      )
+    end
+  );
 end;
 
 procedure TformMain.WMHotkey(var Msg: TWMHotKey);
@@ -1055,6 +1230,16 @@ begin
     else
       Hide;
     SetForegroundWindow(Handle);
+  end
+  else if Msg.HotKey = GlobalFindAtom('MYHOTKEY') then
+  begin
+    if formSettings.Visible and formSettings.hkToggleOverlay.Focused then
+    begin
+      formSettings.hkToggleOverlay.HotKey := TextToShortCut(Settings.OverlayHotkey);
+      Exit;
+    end;
+
+    DarkerOverlay1Click(Self);
   end;
 
 end;
